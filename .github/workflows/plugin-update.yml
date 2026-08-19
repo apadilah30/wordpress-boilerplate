@@ -1,0 +1,81 @@
+name: Plugin Update
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"   # Setiap Senin jam 03:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+
+      - name: Composer update (only wpackagist plugins)
+        id: update
+        run: |
+          composer update \
+            "wpackagist-plugin/*" \
+            --with-dependencies \
+            --prefer-dist \
+            --no-progress \
+            --no-interaction
+          if git diff --quiet composer.lock; then
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+              echo "changed=true"  >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip if nothing changed
+        if: steps.update.outputs.changed == 'false'
+        run: echo "No plugin updates available."
+
+      # ------------------------------------------------------------------
+      # Smoke test: build image + boot + curl healthz
+      # ------------------------------------------------------------------
+      - name: Docker build (smoke)
+        if: steps.update.outputs.changed == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .docker/frankenphp/Dockerfile
+          target: prod
+          push: false
+          load: true
+          tags: wp-boilerplate:smoke
+
+      - name: Smoke test
+        if: steps.update.outputs.changed == 'true'
+        run: ./scripts/smoke-test.sh wp-boilerplate:smoke
+
+      # ------------------------------------------------------------------
+      # Open PR dengan lockfile update
+      # ------------------------------------------------------------------
+      - name: Create Pull Request
+        if: steps.update.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(deps): weekly wpackagist plugin updates"
+          title: "chore(deps): weekly wpackagist plugin updates"
+          body: |
+            Automated weekly plugin update. Smoke test passed.
+
+            **Sebelum merge:**
+            1. Review `composer.lock` diff — perhatikan major version bump
+            2. Cek changelog masing-masing plugin di WordPress.org
+            3. Deploy ke staging untuk manual smoke test
+            4. Merge kalau OK → auto deploy ke prod (kalau workflow deploy sudah setup)
+          branch: chore/plugin-updates
+          delete-branch: true
+          labels: dependencies, plugins

@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # ------------------------------------------------------------------
+  # PHP lint & static analysis
+  # ------------------------------------------------------------------
+  php-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, intl, mysqli
+          coverage: none
+          tools: composer:v2, cs2pr
+
+      - name: Composer install
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Composer audit
+        run: composer audit --no-dev --format=plain || true
+
+      - name: PHP CodeSniffer
+        run: ./vendor/bin/phpcs --report=checkstyle | cs2pr
+
+      - name: PHPStan
+        run: ./vendor/bin/phpstan analyse --error-format=github
+
+  # ------------------------------------------------------------------
+  # Docker build smoke — pastikan image build sukses
+  # ------------------------------------------------------------------
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build prod image (smoke)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .docker/frankenphp/Dockerfile
+          target: prod
+          push: false
+          load: true
+          tags: wp-boilerplate:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: "wp-boilerplate:ci"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+
+      - name: Upload Trivy scan to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-results.sarif"
+
+  # ------------------------------------------------------------------
+  # Shell script lint
+  # ------------------------------------------------------------------
+  shell-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: "./scripts"
+          additional_files: ".docker/backup/backup.sh .docker/backup/entrypoint.sh .docker/frankenphp/entrypoint.sh"

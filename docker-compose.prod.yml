@@ -1,0 +1,77 @@
+# ==============================================================================
+# Production overrides — image dari registry, hardened, no source mount.
+# Jalankan:
+#   docker compose --env-file .env.production \
+#     -f docker-compose.yml -f docker-compose.prod.yml \
+#     up -d
+# ==============================================================================
+
+services:
+  app:
+    image: "${DEPLOY_IMAGE}:${DEPLOY_TAG:-latest}"
+    environment:
+      APP_ENV: production
+      WP_ENV:  production
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    # Container hardening (max lockdown)
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+      - NET_BIND_SERVICE
+      - DAC_OVERRIDE
+    read_only: false
+    tmpfs:
+      - /tmp
+      - /run
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1024M
+
+  db:
+    # DB tidak expose ke host di prod
+    ports: []
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1024M
+
+  redis:
+    ports: []
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backup:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Prod-only: bikin 'internal' network truly internal (no egress dari DB/Redis)
+networks:
+  internal:
+    internal: true

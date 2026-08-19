@@ -1,0 +1,10 @@
+{
+    "name": "boilerplate/wp-boilerplate-announcement",
+    "description": "Reference plugin bawaan boilerplate — site-wide announcement banner.",
+    "type": "wordpress-plugin",
+    "version": "1.0.0",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "composer/installers": "^2.0"
+    }
+}

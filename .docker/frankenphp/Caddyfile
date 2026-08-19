@@ -1,0 +1,107 @@
+# ==============================================================================
+# WordPress Boilerplate — Caddyfile (FrankenPHP mode)
+#
+# Yang di-handle:
+# - Auto HTTPS di prod via {$SERVER_NAME} = domain lu (Caddy pakai Let's Encrypt).
+# - Dev pakai 'localhost' (HTTP saja, HTTPS opsional via Caddy internal CA).
+# - Bedrock WP layout (index.php di /web/).
+# - Deny akses file sensitif.
+# - Security headers.
+# - Deny PHP execution di uploads.
+# - Healthcheck endpoint.
+#
+# CATATAN: rate limit Caddy butuh module tambahan (bukan built-in). Untuk KISS
+# kita rely on Wordfence untuk login rate limit + hosting-level rules. Upgrade
+# path: bundle caddy dengan mholt/caddy-ratelimit via xcaddy.
+# ==============================================================================
+
+{
+    # Menonaktifkan admin API dari luar (default di FrankenPHP)
+    admin off
+
+    # Frankenphp default worker mode config. Kalau FRANKENPHP_WORKER_MODE=1
+    # di env, aktifkan worker mode (lihat CMD di entrypoint).
+    frankenphp {
+        # worker /app/web/index.php {$FRANKENPHP_NUM_THREADS}
+        # Toggle via env — worker mode disable by default. Untuk enable,
+        # set FRANKENPHP_WORKER_MODE=1 dan uncomment via entrypoint.
+    }
+
+    # Log ke stdout dengan format JSON supaya gampang di-parse
+    log {
+        output stdout
+        format json
+        level  {$CADDY_LOG_LEVEL:INFO}
+    }
+}
+
+# ==============================================================================
+# Server block
+# ==============================================================================
+{$SERVER_NAME:localhost} {
+    root * /app/web
+
+    encode zstd br gzip
+
+    # -----------------------------------------------------------------
+    # Security headers
+    # -----------------------------------------------------------------
+    header {
+        # HSTS: prod only (SERVER_NAME bukan localhost) — Caddy auto set kalau HTTPS aktif,
+        # tapi kita tetap explicit dengan max-age panjang + includeSubDomains.
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options    "nosniff"
+        X-Frame-Options           "SAMEORIGIN"
+        Referrer-Policy           "strict-origin-when-cross-origin"
+        Permissions-Policy        "geolocation=(), microphone=(), camera=()"
+        # CSP baseline sengaja permissive untuk kompatibilitas Elementor.
+        # Tighten sendiri sesuai plugin yang dipakai.
+        Content-Security-Policy   "upgrade-insecure-requests"
+        # Hilangkan header identifikasi.
+        -Server
+        -X-Powered-By
+    }
+
+    # -----------------------------------------------------------------
+    # Healthcheck endpoint untuk Docker & load balancer
+    # -----------------------------------------------------------------
+    handle /healthz {
+        respond "ok" 200
+    }
+
+    # -----------------------------------------------------------------
+    # Deny akses ke file sensitif (return 404 supaya tidak leak keberadaan)
+    # -----------------------------------------------------------------
+    @sensitive {
+        path_regexp sensitive_paths ^/(\.env.*|\.git.*|composer\.(json|lock)|README\.md|readme\.html|wp-config\.php|wp-config-sample\.php|xmlrpc\.php)$
+        path_regexp hidden_files ^/\.
+    }
+    respond @sensitive 404
+
+    # -----------------------------------------------------------------
+    # Cegah PHP execution di uploads dan mu-plugins yang tidak seharusnya.
+    # Kalau attacker upload PHP via vulnerable plugin, tidak bisa di-execute.
+    # -----------------------------------------------------------------
+    @php_in_uploads path_regexp php_uploads ^/app/uploads/.*\.ph(p[3457]?|t|tml|ar)$
+    respond @php_in_uploads 403
+
+    # -----------------------------------------------------------------
+    # Bedrock rewrite: /wp/ untuk core, / untuk konten
+    # -----------------------------------------------------------------
+    # File statis dari uploads/themes/plugins di-serve langsung dari filesystem.
+    @staticFiles {
+        file
+        not path *.php
+    }
+    handle @staticFiles {
+        file_server
+    }
+
+    # Everything else → WP index.php via php_server (FrankenPHP native handler).
+    php_server {
+        # Bedrock: index.php di root
+        root /app/web
+        index index.php
+        try_files {path} {path}/ /index.php?{query}
+    }
+}

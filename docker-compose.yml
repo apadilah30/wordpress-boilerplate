@@ -1,0 +1,138 @@
+# ==============================================================================
+# Base docker-compose — service definitions dipakai di semua env.
+# Env-specific overrides ada di docker-compose.{dev,staging,prod}.yml
+#
+# Jalankan:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# ==============================================================================
+
+name: wp-boilerplate
+
+# Reusable base config (YAML anchor untuk DRY)
+x-app-common: &app-common
+  restart: unless-stopped
+  environment:
+    WP_ENV:      "${WP_ENV:-development}"
+    WP_HOME:     "${WP_HOME}"
+    WP_SITEURL:  "${WP_SITEURL}"
+    DB_HOST:     "${DB_HOST:-db}"
+    DB_NAME:     "${DB_NAME}"
+    DB_USER:     "${DB_USER}"
+    DB_PASSWORD: "${DB_PASSWORD}"
+    DB_PREFIX:   "${DB_PREFIX:-wp_}"
+    AUTH_KEY:         "${AUTH_KEY}"
+    SECURE_AUTH_KEY:  "${SECURE_AUTH_KEY}"
+    LOGGED_IN_KEY:    "${LOGGED_IN_KEY}"
+    NONCE_KEY:        "${NONCE_KEY}"
+    AUTH_SALT:        "${AUTH_SALT}"
+    SECURE_AUTH_SALT: "${SECURE_AUTH_SALT}"
+    LOGGED_IN_SALT:   "${LOGGED_IN_SALT}"
+    NONCE_SALT:       "${NONCE_SALT}"
+    REDIS_HOST: "${REDIS_HOST:-redis}"
+    REDIS_PORT: "${REDIS_PORT:-6379}"
+    SERVER_NAME: "${SERVER_NAME:-localhost}"
+    FRANKENPHP_WORKER_MODE: "${FRANKENPHP_WORKER_MODE:-0}"
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  # --------------------------------------------------------------------
+  # App: FrankenPHP + WordPress (Bedrock)
+  # --------------------------------------------------------------------
+  app:
+    <<: *app-common
+    image: "${DEPLOY_IMAGE:-wp-boilerplate}:${DEPLOY_TAG:-latest}"
+    volumes:
+      - uploads:/app/web/app/uploads
+    networks:
+      - web
+      - internal
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:80/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # --------------------------------------------------------------------
+  # DB: MariaDB
+  # --------------------------------------------------------------------
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE:      "${DB_NAME}"
+      MARIADB_USER:          "${DB_USER}"
+      MARIADB_PASSWORD:      "${DB_PASSWORD}"
+      MARIADB_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./.docker/mariadb/conf.d:/etc/mysql/conf.d:ro
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # --------------------------------------------------------------------
+  # Redis: object cache
+  # --------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # --------------------------------------------------------------------
+  # Backup: daily mysqldump + rotate + weekly uploads tarball
+  # --------------------------------------------------------------------
+  backup:
+    build:
+      context: .
+      dockerfile: .docker/backup/Dockerfile
+    image: wp-boilerplate/backup:latest
+    restart: unless-stopped
+    environment:
+      DB_HOST:     "${DB_HOST:-db}"
+      DB_NAME:     "${DB_NAME}"
+      DB_USER:     "${DB_USER}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      BACKUP_CRON:              "${BACKUP_CRON:-0 2 * * *}"
+      BACKUP_RETENTION_DAILY:   "${BACKUP_RETENTION_DAILY:-30}"
+      BACKUP_RETENTION_WEEKLY:  "${BACKUP_RETENTION_WEEKLY:-8}"
+      BACKUP_RETENTION_MONTHLY: "${BACKUP_RETENTION_MONTHLY:-12}"
+    volumes:
+      - backups:/backups
+      - uploads:/uploads:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
+networks:
+  web:
+    driver: bridge
+  internal:
+    driver: bridge
+    internal: false  # dev butuh keluar internet (composer). Prod override → true.
+
+volumes:
+  db_data:
+  redis_data:
+  uploads:
+  backups:

@@ -1,0 +1,15 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - web/app/mu-plugins
+        - web/app/themes/starter
+        - plugins-custom
+    excludePaths:
+        - vendor
+        - web/wp
+        - web/app/plugins
+    ignoreErrors:
+        - '#Constant WPINC not found#'

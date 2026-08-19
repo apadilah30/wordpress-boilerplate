@@ -1,0 +1,46 @@
+# --- Bedrock / WordPress ---
+# WP core & composer-managed plugins/themes are installed at build time.
+web/wp/
+web/app/plugins/
+web/app/mu-plugins/*
+!web/app/mu-plugins/security.php
+!web/app/mu-plugins/register-theme-dirs.php
+web/app/uploads/
+web/app/upgrade/
+web/app/cache/
+web/app/languages/
+
+# Keep composer.lock tracked for reproducible builds
+vendor/
+
+# --- Environment secrets ---
+.env
+.env.*
+!.env.example
+
+# --- Docker & backups ---
+backups/
+docker/data/
+
+# --- Editor & OS ---
+.idea/
+.vscode/
+!.vscode/settings.json.example
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# --- Logs ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Daily rekap (personal notes) ---
+daily/*
+!daily/TEMPLATE.md
+!daily/.gitkeep
+
+# --- Node (kalau nanti pakai untuk asset build) ---
+node_modules/

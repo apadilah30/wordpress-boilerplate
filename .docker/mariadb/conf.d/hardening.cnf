@@ -1,0 +1,33 @@
+# ==============================================================================
+# MariaDB hardening — dipakai dev/staging/prod
+# ==============================================================================
+
+[mysqld]
+# Jangan resolve hostname (perf + security)
+skip-name-resolve = 1
+
+# Disable LOCAL INFILE untuk cegah data exfiltration
+local-infile = 0
+
+# Bind ke semua interface DI DALAM docker network (docker networking sudah isolate).
+# Di prod tidak ada port publish, jadi hanya reachable dari container tetangga.
+bind-address = 0.0.0.0
+
+# Charset default modern
+character-set-server  = utf8mb4
+collation-server      = utf8mb4_unicode_ci
+
+# InnoDB tuning ramah WP (default cukup, tweak kalau workload berat)
+innodb_buffer_pool_size = 256M
+innodb_file_per_table   = 1
+innodb_flush_log_at_trx_commit = 2
+
+# Slow query log — matikan by default, aktifkan saat butuh diagnose
+slow_query_log = 0
+long_query_time = 2
+
+# Max connections konservatif — WP biasanya tidak butuh banyak
+max_connections = 100
+
+[client]
+default-character-set = utf8mb4
