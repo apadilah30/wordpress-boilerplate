@@ -21,7 +21,6 @@ source "${SCRIPT_DIR}/lib/common.sh"
 require_cmd docker
 
 COMPOSE="docker compose"
-BACKUP_CONTAINER="wp-boilerplate-backup-1"
 YES=0
 FILE=""
 
