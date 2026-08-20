@@ -10,8 +10,8 @@
 
 declare(strict_types=1);
 
-if (!defined('ABSPATH')) {
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
-register_theme_directory(ABSPATH . 'wp-content/themes');
+register_theme_directory( ABSPATH . 'wp-content/themes' );

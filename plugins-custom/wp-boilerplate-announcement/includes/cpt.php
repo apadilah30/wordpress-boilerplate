@@ -35,20 +35,20 @@ function wpba_register_post_type(): void {
 	register_post_type(
 		WPBA_POST_TYPE,
 		array(
-			'labels'            => $labels,
-			'description'       => __( 'Site-wide announcement banners.', 'wp-boilerplate-announcement' ),
-			'public'            => false,
-			'show_ui'           => true,
-			'show_in_menu'      => true,
-			'show_in_rest'      => true,
-			'menu_icon'         => 'dashicons-megaphone',
-			'menu_position'     => 25,
-			'capability_type'   => 'post',
-			'supports'          => array( 'title', 'editor', 'excerpt' ),
-			'has_archive'       => false,
-			'rewrite'           => false,
-			'query_var'         => false,
-			'delete_with_user'  => false,
+			'labels' => $labels,
+			'description' => __( 'Site-wide announcement banners.', 'wp-boilerplate-announcement' ),
+			'public' => false,
+			'show_ui' => true,
+			'show_in_menu' => true,
+			'show_in_rest' => true,
+			'menu_icon' => 'dashicons-megaphone',
+			'menu_position' => 25,
+			'capability_type' => 'post',
+			'supports' => array( 'title', 'editor', 'excerpt' ),
+			'has_archive' => false,
+			'rewrite' => false,
+			'query_var' => false,
+			'delete_with_user' => false,
 		)
 	);
 }
@@ -60,13 +60,13 @@ function wpba_register_post_meta(): void {
 		WPBA_POST_TYPE,
 		WPBA_META_COLOR,
 		array(
-			'type'              => 'string',
-			'description'       => __( 'Background color (hex).', 'wp-boilerplate-announcement' ),
-			'single'            => true,
-			'show_in_rest'      => true,
-			'default'           => '#0073aa',
+			'type' => 'string',
+			'description' => __( 'Background color (hex).', 'wp-boilerplate-announcement' ),
+			'single' => true,
+			'show_in_rest' => true,
+			'default' => '#0073aa',
 			'sanitize_callback' => static fn( $value ) => sanitize_hex_color( (string) $value ) ?: '#0073aa',
-			'auth_callback'     => static fn(): bool => current_user_can( 'edit_posts' ),
+			'auth_callback' => static fn(): bool => current_user_can( 'edit_posts' ),
 		)
 	);
 
@@ -74,13 +74,13 @@ function wpba_register_post_meta(): void {
 		WPBA_POST_TYPE,
 		WPBA_META_LINK,
 		array(
-			'type'              => 'string',
-			'description'       => __( 'Optional CTA URL.', 'wp-boilerplate-announcement' ),
-			'single'            => true,
-			'show_in_rest'      => true,
-			'default'           => '',
+			'type' => 'string',
+			'description' => __( 'Optional CTA URL.', 'wp-boilerplate-announcement' ),
+			'single' => true,
+			'show_in_rest' => true,
+			'default' => '',
 			'sanitize_callback' => 'esc_url_raw',
-			'auth_callback'     => static fn(): bool => current_user_can( 'edit_posts' ),
+			'auth_callback' => static fn(): bool => current_user_can( 'edit_posts' ),
 		)
 	);
 }
