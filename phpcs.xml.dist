@@ -2,8 +2,6 @@
 <ruleset name="Boilerplate">
     <description>WordPress Coding Standards for this boilerplate.</description>
 
-    <file>web/app/mu-plugins</file>
-    <file>web/app/themes/starter</file>
     <file>plugins-custom</file>
 
     <exclude-pattern>*/vendor/*</exclude-pattern>
