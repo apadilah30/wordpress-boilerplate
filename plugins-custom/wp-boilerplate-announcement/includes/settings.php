@@ -56,8 +56,13 @@ function wpba_sanitize_legacy_settings( $input ): array {
 		'legacy_message' => isset( $input['legacy_message'] )
 			? sanitize_text_field( (string) $input['legacy_message'] )
 			: '',
-		'legacy_color'   => sanitize_hex_color( (string) ( $input['legacy_color'] ?? '' ) ) ?: '#0073aa',
+		'legacy_color'   => wpba_get_legacy_color( (string) ( $input['legacy_color'] ?? '' ) ),
 	);
+}
+
+function wpba_get_legacy_color( string $color ): string {
+	$sanitized = sanitize_hex_color( $color );
+	return is_string( $sanitized ) && '' !== $sanitized ? $sanitized : '#0073aa';
 }
 
 function wpba_render_legacy_settings_page(): void {
@@ -69,7 +74,7 @@ function wpba_render_legacy_settings_page(): void {
 		'legacy_message' => '',
 		'legacy_color'   => '#0073aa',
 	);
-	$opts     = wp_parse_args( (array) get_option( WPBA_OPTION_KEY, array() ), $defaults );
+	$opts = wp_parse_args( (array) get_option( WPBA_OPTION_KEY, array() ), $defaults );
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Legacy Banner Settings', 'wp-boilerplate-announcement' ); ?></h1>
@@ -139,7 +144,7 @@ add_action(
 			return;
 		}
 
-		$color   = sanitize_hex_color( (string) ( $opts['legacy_color'] ?? '#0073aa' ) ) ?: '#0073aa';
+		$color = wpba_get_legacy_color( (string) ( $opts['legacy_color'] ?? '#0073aa' ) );
 		$message = (string) $opts['legacy_message'];
 		printf(
 			'<div class="wpba-banner wpba-banner--legacy" role="note" style="background:%s;color:#fff;padding:12px;text-align:center;font-family:sans-serif;">%s</div>',

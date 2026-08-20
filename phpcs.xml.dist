@@ -10,6 +10,7 @@
     <exclude-pattern>*/node_modules/*</exclude-pattern>
     <exclude-pattern>*/web/wp/*</exclude-pattern>
     <exclude-pattern>*/web/app/plugins/*</exclude-pattern>
+    <exclude-pattern>*/web/app/mu-plugins/bedrock-disallow-indexing/*</exclude-pattern>
 
     <arg name="extensions" value="php"/>
     <arg name="colors"/>
