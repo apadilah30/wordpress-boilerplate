@@ -21,10 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-const WPBA_VERSION    = '2.0.0';
-const WPBA_POST_TYPE  = 'wpba_announcement';
+const WPBA_VERSION = '2.0.0';
+const WPBA_POST_TYPE = 'wpba_announcement';
 const WPBA_META_COLOR = '_wpba_bg_color';
-const WPBA_META_LINK  = '_wpba_cta_url';
+const WPBA_META_LINK = '_wpba_cta_url';
 const WPBA_OPTION_KEY = 'wpba_settings';
 const WPBA_TEXT_DOMAIN = 'wp-boilerplate-announcement';
 

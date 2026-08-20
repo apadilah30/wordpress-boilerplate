@@ -51,13 +51,17 @@ add_action(
  */
 function wpba_sanitize_legacy_settings( $input ): array {
 	$input = is_array( $input ) ? $input : array();
-	return array(
+	$settings = array(
 		'legacy_enabled' => ! empty( $input['legacy_enabled'] ),
 		'legacy_message' => isset( $input['legacy_message'] )
 			? sanitize_text_field( (string) $input['legacy_message'] )
 			: '',
-		'legacy_color'   => sanitize_hex_color( (string) ( $input['legacy_color'] ?? '' ) ) ?: '#0073aa',
+		'legacy_color'   => '',
 	);
+	$legacy_color = sanitize_hex_color( (string) ( $input['legacy_color'] ?? '' ) );
+	$settings['legacy_color'] = '' !== $legacy_color && null !== $legacy_color ? $legacy_color : '#0073aa';
+
+	return $settings;
 }
 
 function wpba_render_legacy_settings_page(): void {
@@ -133,13 +137,14 @@ add_action(
 			return;
 		}
 
-		$count = wp_count_posts( WPBA_POST_TYPE );
+		$count   = wp_count_posts( WPBA_POST_TYPE );
 		$has_cpt = isset( $count->publish ) && (int) $count->publish > 0;
 		if ( $has_cpt ) {
 			return;
 		}
 
-		$color   = sanitize_hex_color( (string) ( $opts['legacy_color'] ?? '#0073aa' ) ) ?: '#0073aa';
+		$color = sanitize_hex_color( (string) ( $opts['legacy_color'] ?? '#0073aa' ) );
+		$color = '' !== $color && null !== $color ? $color : '#0073aa';
 		$message = (string) $opts['legacy_message'];
 		printf(
 			'<div class="wpba-banner wpba-banner--legacy" role="note" style="background:%s;color:#fff;padding:12px;text-align:center;font-family:sans-serif;">%s</div>',

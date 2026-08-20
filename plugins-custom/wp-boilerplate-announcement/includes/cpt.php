@@ -35,20 +35,20 @@ function wpba_register_post_type(): void {
 	register_post_type(
 		WPBA_POST_TYPE,
 		array(
-			'labels'            => $labels,
-			'description'       => __( 'Site-wide announcement banners.', 'wp-boilerplate-announcement' ),
-			'public'            => false,
-			'show_ui'           => true,
-			'show_in_menu'      => true,
-			'show_in_rest'      => true,
-			'menu_icon'         => 'dashicons-megaphone',
-			'menu_position'     => 25,
-			'capability_type'   => 'post',
-			'supports'          => array( 'title', 'editor', 'excerpt' ),
-			'has_archive'       => false,
-			'rewrite'           => false,
-			'query_var'         => false,
-			'delete_with_user'  => false,
+			'labels' => $labels,
+			'description' => __( 'Site-wide announcement banners.', 'wp-boilerplate-announcement' ),
+			'public' => false,
+			'show_ui' => true,
+			'show_in_menu' => true,
+			'show_in_rest' => true,
+			'menu_icon' => 'dashicons-megaphone',
+			'menu_position' => 25,
+			'capability_type' => 'post',
+			'supports' => array( 'title', 'editor', 'excerpt' ),
+			'has_archive' => false,
+			'rewrite' => false,
+			'query_var' => false,
+			'delete_with_user' => false,
 		)
 	);
 }
@@ -65,7 +65,10 @@ function wpba_register_post_meta(): void {
 			'single'            => true,
 			'show_in_rest'      => true,
 			'default'           => '#0073aa',
-			'sanitize_callback' => static fn( $value ) => sanitize_hex_color( (string) $value ) ?: '#0073aa',
+			'sanitize_callback' => static function ( $value ): string {
+				$color = sanitize_hex_color( (string) $value );
+				return '' !== $color && null !== $color ? $color : '#0073aa';
+			},
 			'auth_callback'     => static fn(): bool => current_user_can( 'edit_posts' ),
 		)
 	);
