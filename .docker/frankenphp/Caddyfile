@@ -54,9 +54,10 @@
         X-Frame-Options           "SAMEORIGIN"
         Referrer-Policy           "strict-origin-when-cross-origin"
         Permissions-Policy        "geolocation=(), microphone=(), camera=()"
-        # CSP baseline sengaja permissive untuk kompatibilitas Elementor.
-        # Tighten sendiri sesuai plugin yang dipakai.
-        Content-Security-Policy   "upgrade-insecure-requests"
+        # CSP: intentionally NOT set default supaya dev HTTP tetap jalan (kalau
+        # set `upgrade-insecure-requests`, browser paksa semua asset ke HTTPS
+        # dan gagal di localhost). Tambahkan di prod sesuai plugin — contoh:
+        #   Content-Security-Policy "upgrade-insecure-requests"
         # Hilangkan header identifikasi.
         -Server
         -X-Powered-By
@@ -71,18 +72,19 @@
 
     # -----------------------------------------------------------------
     # Deny akses ke file sensitif (return 404 supaya tidak leak keberadaan)
+    # Note: 1 named matcher = 1 path_regexp. Split jadi 2 matcher berbeda.
     # -----------------------------------------------------------------
-    @sensitive {
-        path_regexp sensitive_paths ^/(\.env.*|\.git.*|composer\.(json|lock)|README\.md|readme\.html|wp-config\.php|wp-config-sample\.php|xmlrpc\.php)$
-        path_regexp hidden_files ^/\.
-    }
+    @dotfiles path_regexp ^/\.
+    respond @dotfiles 404
+
+    @sensitive path_regexp ^/(composer\.(json|lock)|README\.md|readme\.html|wp-config(-sample)?\.php|xmlrpc\.php)$
     respond @sensitive 404
 
     # -----------------------------------------------------------------
-    # Cegah PHP execution di uploads dan mu-plugins yang tidak seharusnya.
+    # Cegah PHP execution di uploads.
     # Kalau attacker upload PHP via vulnerable plugin, tidak bisa di-execute.
     # -----------------------------------------------------------------
-    @php_in_uploads path_regexp php_uploads ^/app/uploads/.*\.ph(p[3457]?|t|tml|ar)$
+    @php_in_uploads path_regexp ^/app/uploads/.*\.ph(p[3457]?|t|tml|ar)$
     respond @php_in_uploads 403
 
     # -----------------------------------------------------------------
@@ -98,10 +100,9 @@
     }
 
     # Everything else → WP index.php via php_server (FrankenPHP native handler).
-    php_server {
-        # Bedrock: index.php di root
-        root /app/web
-        index index.php
-        try_files {path} {path}/ /index.php?{query}
-    }
+    # php_server default try_files sudah cocok untuk WordPress:
+    #   {path} {path}/index.php index.php
+    # → cek file exact, dir dengan index.php, fallback ke root index.php.
+    # Query string di-preserve otomatis oleh Caddy (tidak perlu ?{query}).
+    php_server
 }

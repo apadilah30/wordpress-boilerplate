@@ -17,7 +17,9 @@
         "sort-packages": true,
         "allow-plugins": {
             "composer/installers": true,
-            "roots/wordpress-core-installer": true
+            "roots/wordpress-core-installer": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "phpstan/extension-installer": true
         }
     },
     "repositories": [
@@ -42,10 +44,11 @@
         "oscarotero/env": "^2.1",
         "roots/bedrock-autoloader": "^1.0",
         "roots/bedrock-disallow-indexing": "^2.0",
-        "roots/wordpress": "6.6.2",
+        "roots/wordpress": "6.9.7",
         "roots/wp-config": "1.0.0",
         "roots/wp-password-bcrypt": "1.1.0",
-        "wpackagist-plugin/elementor": "3.23.4",
+        "wpackagist-plugin/elementor": "3.35.9",
+        "wpackagist-plugin/elementskit-lite": "4.0.1",
         "wpackagist-plugin/wordfence": "8.0.2",
         "wpackagist-plugin/wp-super-cache": "1.12.4",
         "wpackagist-plugin/wordpress-seo": "23.7",
@@ -53,6 +56,12 @@
         "wpackagist-plugin/updraftplus": "1.24.12",
         "wpackagist-plugin/wps-hide-login": "1.9.16.5",
         "wpackagist-plugin/redirection": "5.4.2",
+        "wpackagist-plugin/custom-post-type-ui": "1.19.3",
+        "wpackagist-plugin/advanced-custom-fields": "6.8.8",
+        "wpackagist-plugin/polylang": "3.8.7",
+        "wpackagist-plugin/loco-translate": "2.8.8",
+        "wpackagist-plugin/shortcodes-ultimate": "7.8.4",
+        "wpackagist-plugin/members": "3.2.26",
         "boilerplate/wp-boilerplate-announcement": "*"
     },
     "require-dev": {

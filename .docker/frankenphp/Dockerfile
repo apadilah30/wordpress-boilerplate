@@ -53,7 +53,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY .docker/frankenphp/php.ini       /usr/local/etc/php/php.ini
 COPY .docker/frankenphp/Caddyfile     /etc/caddy/Caddyfile
 COPY .docker/frankenphp/entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Strip Windows CRLF di semua file text yang di-consume Linux (safety net
+# kalau file di-edit di Windows editor tanpa hormatin .gitattributes)
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh /etc/caddy/Caddyfile /usr/local/etc/php/php.ini \
+    && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 WORKDIR /app
 

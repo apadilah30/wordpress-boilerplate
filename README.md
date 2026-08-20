@@ -18,14 +18,15 @@ Boilerplate WordPress produksi yang **ramah pemula tapi scalable**. Fokus: keama
 2. [Setup dev cepat](#setup-dev-cepat)
 3. [Struktur repo](#struktur-repo)
 4. [Multi-stage environment](#multi-stage-environment)
-5. [Menambah plugin](#menambah-plugin)
-6. [Deploy ke staging & production](#deploy-ke-staging--production)
-7. [Backup & restore](#backup--restore)
-8. [Migrasi antar server](#migrasi-antar-server)
-9. [Security hardening](#security-hardening)
-10. [Upgrade path](#upgrade-path)
-11. [Troubleshooting](#troubleshooting)
-12. [Workflow rules](#workflow-rules)
+5. [Plugin ecosystem (bundled)](#plugin-ecosystem-bundled)
+6. [Menambah plugin](#menambah-plugin)
+7. [Deploy ke staging & production](#deploy-ke-staging--production)
+8. [Backup & restore](#backup--restore)
+9. [Migrasi antar server](#migrasi-antar-server)
+10. [Security hardening](#security-hardening)
+11. [Upgrade path](#upgrade-path)
+12. [Troubleshooting](#troubleshooting)
+13. [Workflow rules](#workflow-rules)
 
 ---
 
@@ -45,35 +46,86 @@ Boilerplate WordPress produksi yang **ramah pemula tapi scalable**. Fokus: keama
 
 ## Setup dev cepat
 
+### Cara paling gampang (1 command)
+
 ```bash
 git clone https://github.com/OWNER/wordpress-boilerplate.git
 cd wordpress-boilerplate
 
-# 1. Copy env & generate salts baru dari https://roots.io/salts.html
+# 1. Copy env & edit
 cp .env.example .env
-# Edit .env — minimal isi: DB_PASSWORD, DB_ROOT_PASSWORD, semua *_KEY dan *_SALT
+# WAJIB edit .env:
+#   - Set DB_PASSWORD, DB_ROOT_PASSWORD (jangan biarin default)
+#   - Generate salts baru dari https://roots.io/salts.html, paste ke *_KEY dan *_SALT
+#   - Kalau port 80 dipakai (XAMPP dll): ubah HTTP_PORT & WP_HOME
 
-# 2. Build & start
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+# 2. First-time setup (auto: build, start, tunggu composer, install WP, aktifkan plugin)
+./scripts/dev-init.sh
+```
 
-# 3. Install WordPress (first boot)
+Buka URL yang di-print di output (default http://localhost).
+Admin URL: `http://localhost/wp/wp-login.php` — default `owner` / `changeme123` (ubah di `.env` sebelum init).
+
+### Kalau port 80 udah dipakai di host lu
+
+Ubah di `.env`:
+```
+HTTP_PORT=8080
+HTTPS_PORT=8443
+WP_HOME=http://localhost:8080
+```
+
+Lalu jalankan `./scripts/dev-init.sh` lagi.
+
+### Manual step-by-step (kalau mau paham prosesnya)
+
+```bash
+cp .env.example .env
+# ...edit .env...
+
+# 1. Build image
+docker compose -f docker-compose.yml -f docker-compose.dev.yml build
+
+# 2. Start containers
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+# 3. Tunggu composer install selesai (first boot download WordPress core + plugins,
+#    bisa 2-5 menit). Watch log:
+docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f app
+# Cari baris: "composer install completed successfully" → Ctrl+C
+
+# 4. Install WordPress core
 docker compose exec -u www-data app wp core install \
     --path=/app/web/wp \
     --url=http://localhost \
     --title="My Site" \
     --admin_user=owner \
-    --admin_password=changeme \
+    --admin_password=changeme123 \
     --admin_email=you@example.com \
     --skip-email
 
-# 4. Aktifkan starter theme + plugin
+# 5. Aktifkan starter theme + plugin
 docker compose exec -u www-data app wp theme activate starter --path=/app/web/wp
 docker compose exec -u www-data app wp plugin activate elementor --path=/app/web/wp
 ```
 
-Buka http://localhost — WordPress siap.
+### Troubleshooting first-time setup
 
-Login admin: http://localhost/wp/wp-login.php (atau slug custom kalau lu setup WPS Hide Login).
+**"This does not seem to be a WordPress installation"**
+
+Composer install belum selesai (WordPress core masih di-download). Cek:
+```bash
+docker compose exec app ls /app/web/wp | head -5
+# Kalau kosong → tunggu composer selesai. Kalau tetap kosong setelah 10 menit:
+docker compose logs app --tail 100
+```
+
+**"Error establishing a database connection"**
+
+Cek `.env` — `DB_PASSWORD` sudah bukan default? Test:
+```bash
+docker compose exec db mysqladmin ping -h localhost -u root -p"${DB_ROOT_PASSWORD}"
+```
 
 ---
 
@@ -143,6 +195,78 @@ docker compose --env-file .env.production \
 
 ---
 
+## Plugin ecosystem (bundled)
+
+Semua plugin di bawah **100% free / GPL** dan auto-install via `composer install`. Bisa dinonaktifkan/dihapus sesuai kebutuhan.
+
+### Page builder (Elementor Pro alternative — semua fitur free)
+
+| Plugin | Slug WPackagist | Peran |
+|--------|-----------------|-------|
+| **Elementor** | `elementor` | Base page builder |
+| **ElementsKit Lite** | `elementskit-lite` | Pengganti Elementor Pro all-in-one: **theme builder** (custom header/footer), **mega menu**, **popup builder**, **onepage nav**, **layout library**, 40+ widget premium-like |
+
+Kombinasi ini cover 80–90% fitur Elementor Pro tanpa berlangganan. Kalau butuh **form builder** setara Elementor Pro Forms, tambahkan `wpackagist-plugin/metform` (opsional).
+
+### Content modeling
+
+| Plugin | Slug | Peran |
+|--------|------|-------|
+| **Custom Post Type UI** | `custom-post-type-ui` | UI GUI untuk register CPT & taxonomies tanpa nulis kode |
+| **Advanced Custom Fields** | `advanced-custom-fields` | Custom field builder, integrasi native dengan Elementor's Dynamic Tags |
+
+### Multilingual (i18n)
+
+| Plugin | Slug | Peran |
+|--------|------|-------|
+| **Polylang** | `polylang` | Multilingual site — buat versi bahasa berbeda untuk post/page/media |
+| **Loco Translate** | `loco-translate` | Translate string `.po/.mo` dari theme/plugin (i18n text domain) langsung di WP admin |
+
+### Utility
+
+| Plugin | Slug | Peran |
+|--------|------|-------|
+| **Shortcodes Ultimate** | `shortcodes-ultimate` | 60+ ready-made shortcode (button, slider, accordion, tab, dynamic content) |
+
+### Role & permission management
+
+| Plugin | Slug | Peran |
+|--------|------|-------|
+| **Members** (by MemberPress) | `members` | Custom role builder, capability editor per role, content permission (per-post lockdown), block editor lockdown, private site mode |
+
+Setelah aktif, menu **Members** muncul di admin sidebar. Ada 4 sub-menu utama:
+- **Roles** — bikin/edit/clone role, assign capabilities via checkbox UI.
+- **Add New Role** — bikin role custom (misal "editor-jr", "kontributor-tamu").
+- **Capabilities** — daftar semua capability WP + custom + plugin, edit yang punya akses.
+- **Add-Ons** — extension gratis (Privacy Caps, Block Permissions, Role Levels, dll).
+
+### SEO & performance & security
+
+| Plugin | Slug | Peran |
+|--------|------|-------|
+| **Yoast SEO** | `wordpress-seo` | SEO on-page, sitemap, schema |
+| **WP Super Cache** | `wp-super-cache` | Static page cache (bisa disable kalau pakai FrankenPHP worker mode) |
+| **Wordfence** | `wordfence` | WAF, malware scan, brute force protection, 2FA |
+| **WPS Hide Login** | `wps-hide-login` | Ganti URL login default jadi custom (defense in depth) |
+| **Redirection** | `redirection` | Manage redirect rules dari admin (bagus untuk migrasi konten) |
+| **UpdraftPlus** | `updraftplus` | Backup ke cloud (redundant dengan backup service, tapi enable kalau butuh restore point granular) |
+
+### Contact form
+
+| Plugin | Slug | Peran |
+|--------|------|-------|
+| **Contact Form 7** | `contact-form-7` | Form builder simple |
+
+### Reference plugin (custom, di-commit ke repo)
+
+| Plugin | Path | Peran |
+|--------|------|-------|
+| **WP Boilerplate Announcement** | `plugins-custom/wp-boilerplate-announcement/` | Template siap-copy: contoh CPT + meta box + dynamic shortcode + i18n |
+
+Detail plugin ini di section [Reference plugin](#reference-plugin).
+
+---
+
 ## Menambah plugin
 
 ### Plugin dari WordPress.org (WPackagist)
@@ -199,13 +323,47 @@ git push  # auto-deploy via CI
 
 ### Reference plugin
 
-Boilerplate include reference plugin `wp-boilerplate-announcement` (folder `plugins-custom/wp-boilerplate-announcement/`) sebagai template siap-copy. Non-active by default.
+Boilerplate include reference plugin `wp-boilerplate-announcement` (folder `plugins-custom/wp-boilerplate-announcement/`) — auto-aktif via `dev-init.sh`. Dibuat sebagai **template siap-copy** yang mendemonstrasikan pattern lengkap plugin custom.
 
-```bash
-# Aktifkan (di dev):
-docker compose exec -u www-data app wp plugin activate wp-boilerplate-announcement --path=/app/web/wp
+**Yang dicontohkan:**
 
-# Config di: WP admin → Settings → Announcement Banner
+- Custom Post Type registration (`wpba_announcement`) tanpa CPT UI plugin
+- Meta box native dengan nonce validation, sanitize/escape ala WP standard
+- `register_post_meta()` untuk expose meta ke REST API + Gutenberg
+- Dynamic shortcode dengan attribute-driven output
+- i18n lengkap: `load_plugin_textdomain`, `.pot` template di `languages/`, escaping i18n functions
+- Backward compat fallback (legacy option-based banner)
+- Uninstall handler yang bersih (option + CPT posts)
+
+**Shortcode `[wpba_announcement]`:**
+
+```
+[wpba_announcement]                       → 1 pengumuman terbaru
+[wpba_announcement latest="3"]            → 3 pengumuman terbaru
+[wpba_announcement id="42"]               → pengumuman ID 42 spesifik
+[wpba_announcement id="42" class="promo"] → dengan CSS class extra
+```
+
+**Cara pakai:**
+
+1. WP admin → **Announcements** → Add New (isi title, konten, background color, optional CTA link).
+2. Publish.
+3. Taruh shortcode di theme (`do_shortcode()`) atau drag Elementor's "Shortcode" widget dan paste `[wpba_announcement]`.
+
+**Struktur file:**
+
+```
+plugins-custom/wp-boilerplate-announcement/
+├── wp-boilerplate-announcement.php   Plugin bootstrap
+├── includes/
+│   ├── cpt.php                       CPT + meta box registration
+│   ├── shortcode.php                 [wpba_announcement] renderer
+│   └── settings.php                  Legacy fallback + settings page
+├── languages/
+│   └── wp-boilerplate-announcement.pot    i18n template
+├── composer.json
+├── readme.txt
+└── uninstall.php
 ```
 
 ---

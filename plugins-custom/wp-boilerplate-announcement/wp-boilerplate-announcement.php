@@ -1,135 +1,78 @@
 <?php
 /**
- * Plugin Name:  WP Boilerplate Announcement
- * Plugin URI:   https://example.com/plugins/wp-boilerplate-announcement
- * Description:  Reference plugin bawaan boilerplate. Menampilkan banner pengumuman
- *               site-wide yang bisa di-config dari admin. Aman untuk di-copy sebagai
- *               template untuk plugin custom lain.
- * Version:      1.0.0
+ * Plugin Name:       WP Boilerplate Announcement
+ * Plugin URI:        https://example.com/plugins/wp-boilerplate-announcement
+ * Description:       Reference plugin bawaan boilerplate. Contoh integrasi WordPress: CPT + meta box + dynamic shortcode + i18n. Aman untuk di-copy sebagai template plugin custom lain.
+ * Version:           2.0.0
  * Requires at least: 6.4
- * Requires PHP: 8.2
- * Author:       Apadilah
- * License:      GPL-2.0-or-later
- * Text Domain:  wp-boilerplate-announcement
+ * Requires PHP:      8.2
+ * Author:            Apadilah
+ * License:           GPL-2.0-or-later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       wp-boilerplate-announcement
+ * Domain Path:       /languages
+ *
+ * @package WpBoilerplateAnnouncement
  */
 
 declare(strict_types=1);
 
-if (!defined('ABSPATH')) {
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
+const WPBA_VERSION    = '2.0.0';
+const WPBA_POST_TYPE  = 'wpba_announcement';
+const WPBA_META_COLOR = '_wpba_bg_color';
+const WPBA_META_LINK  = '_wpba_cta_url';
 const WPBA_OPTION_KEY = 'wpba_settings';
-const WPBA_VERSION    = '1.0.0';
+const WPBA_TEXT_DOMAIN = 'wp-boilerplate-announcement';
 
-// --------------------------------------------------------------------
-// Activation: set default options
-// --------------------------------------------------------------------
-register_activation_hook(__FILE__, static function (): void {
-    add_option(WPBA_OPTION_KEY, [
-        'enabled'  => false,
-        'message'  => __('Welcome to our site!', 'wp-boilerplate-announcement'),
-        'bg_color' => '#0073aa',
-    ]);
-});
+define( 'WPBA_PLUGIN_FILE', __FILE__ );
+define( 'WPBA_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 
-// --------------------------------------------------------------------
-// Admin: settings page
-// --------------------------------------------------------------------
-add_action('admin_menu', static function (): void {
-    add_options_page(
-        __('Announcement Banner', 'wp-boilerplate-announcement'),
-        __('Announcement Banner', 'wp-boilerplate-announcement'),
-        'manage_options',
-        'wpba-settings',
-        'wpba_render_settings_page'
-    );
-});
-
-add_action('admin_init', static function (): void {
-    register_setting('wpba_settings_group', WPBA_OPTION_KEY, [
-        'type'              => 'array',
-        'sanitize_callback' => 'wpba_sanitize_settings',
-        'default'           => [],
-    ]);
-});
+require_once WPBA_PLUGIN_DIR . 'includes/cpt.php';
+require_once WPBA_PLUGIN_DIR . 'includes/shortcode.php';
+require_once WPBA_PLUGIN_DIR . 'includes/settings.php';
 
 /**
- * @param mixed $input
- * @return array{enabled: bool, message: string, bg_color: string}
+ * Load translation files from /languages folder.
+ * WordPress core auto-loads from wp-content/languages/plugins/ (community
+ * translations) — plugin-local /languages/ is a fallback for bundled .mo files.
  */
-function wpba_sanitize_settings($input): array
-{
-    $input = is_array($input) ? $input : [];
-    return [
-        'enabled'  => !empty($input['enabled']),
-        'message'  => isset($input['message']) ? sanitize_text_field((string) $input['message']) : '',
-        'bg_color' => sanitize_hex_color((string) ($input['bg_color'] ?? '')) ?: '#0073aa',
-    ];
-}
+add_action(
+	'init',
+	static function (): void {
+		load_plugin_textdomain(
+			WPBA_TEXT_DOMAIN,
+			false,
+			dirname( plugin_basename( __FILE__ ) ) . '/languages'
+		);
+	}
+);
 
-function wpba_render_settings_page(): void
-{
-    if (!current_user_can('manage_options')) {
-        return;
-    }
-    $defaults = ['enabled' => false, 'message' => '', 'bg_color' => '#0073aa'];
-    $opts     = wp_parse_args((array) get_option(WPBA_OPTION_KEY, []), $defaults);
-    ?>
-    <div class="wrap">
-        <h1><?php esc_html_e('Announcement Banner', 'wp-boilerplate-announcement'); ?></h1>
-        <form method="post" action="options.php">
-            <?php settings_fields('wpba_settings_group'); ?>
-            <table class="form-table" role="presentation">
-                <tr>
-                    <th scope="row">
-                        <label for="wpba-enabled"><?php esc_html_e('Enable banner', 'wp-boilerplate-announcement'); ?></label>
-                    </th>
-                    <td>
-                        <input type="checkbox" id="wpba-enabled" name="wpba_settings[enabled]" value="1" <?php checked($opts['enabled']); ?>>
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row">
-                        <label for="wpba-message"><?php esc_html_e('Message', 'wp-boilerplate-announcement'); ?></label>
-                    </th>
-                    <td>
-                        <input type="text" id="wpba-message" class="regular-text"
-                               name="wpba_settings[message]"
-                               value="<?php echo esc_attr($opts['message']); ?>">
-                    </td>
-                </tr>
-                <tr>
-                    <th scope="row">
-                        <label for="wpba-bg"><?php esc_html_e('Background color', 'wp-boilerplate-announcement'); ?></label>
-                    </th>
-                    <td>
-                        <input type="text" id="wpba-bg"
-                               name="wpba_settings[bg_color]"
-                               value="<?php echo esc_attr($opts['bg_color']); ?>"
-                               placeholder="#0073aa">
-                    </td>
-                </tr>
-            </table>
-            <?php submit_button(); ?>
-        </form>
-    </div>
-    <?php
-}
+register_activation_hook(
+	__FILE__,
+	static function (): void {
+		wpba_register_post_type();
+		flush_rewrite_rules();
 
-// --------------------------------------------------------------------
-// Frontend: render banner
-// --------------------------------------------------------------------
-add_action('wp_body_open', static function (): void {
-    $opts = (array) get_option(WPBA_OPTION_KEY, []);
-    if (empty($opts['enabled']) || empty($opts['message'])) {
-        return;
-    }
-    $bg      = sanitize_hex_color((string) ($opts['bg_color'] ?? '#0073aa')) ?: '#0073aa';
-    $message = (string) $opts['message'];
-    printf(
-        '<div class="wpba-banner" style="background:%s;color:#fff;padding:12px;text-align:center;font-family:sans-serif;">%s</div>',
-        esc_attr($bg),
-        esc_html($message)
-    );
-});
+		if ( false === get_option( WPBA_OPTION_KEY ) ) {
+			add_option(
+				WPBA_OPTION_KEY,
+				array(
+					'legacy_enabled' => false,
+					'legacy_message' => __( 'Welcome to our site!', 'wp-boilerplate-announcement' ),
+					'legacy_color'   => '#0073aa',
+				)
+			);
+		}
+	}
+);
+
+register_deactivation_hook(
+	__FILE__,
+	static function (): void {
+		flush_rewrite_rules();
+	}
+);

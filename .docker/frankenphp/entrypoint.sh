@@ -23,10 +23,20 @@ log() { printf '[entrypoint] %s\n' "$*" >&2; }
 # Prod: skip — sudah di-copy dari stage 'vendor'.
 # ------------------------------------------------------------------
 if [[ "${APP_ENV}" == "development" ]]; then
-    if [[ ! -d /app/vendor ]] || [[ ! -f /app/vendor/autoload.php ]]; then
-        log "Development env — running composer install"
+    # Cek 2 hal: vendor autoload + WP core (kalau container di-recreate, wp/ hilang
+    # tapi vendor/ persist di named volume — perlu install ulang WP core saja).
+    if [[ ! -f /app/vendor/autoload.php ]] || [[ ! -f /app/web/wp/wp-load.php ]]; then
+        log "Development env — composer install needed"
+        log "First boot: download semua (~2-5 min). Container recreate: WP core saja (~30s)."
         cd /app
-        composer install --no-interaction --prefer-dist --optimize-autoloader
+        if ! composer install --no-interaction --prefer-dist --optimize-autoloader 2>&1; then
+            log "ERROR: composer install failed. Container will exit."
+            log "Cek: composer.json valid? Network reachable? Disk space?"
+            exit 1
+        fi
+        log "composer install completed successfully"
+    else
+        log "vendor/ + WP core sudah lengkap — skip composer install"
     fi
 fi
 

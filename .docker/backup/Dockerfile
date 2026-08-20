@@ -15,9 +15,11 @@ RUN apk add --no-cache \
         supercronic \
     && mkdir -p /backups/db /backups/files
 
-COPY .docker/backup/backup.sh   /usr/local/bin/backup.sh
+COPY .docker/backup/backup.sh     /usr/local/bin/backup.sh
 COPY .docker/backup/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/backup.sh /usr/local/bin/entrypoint.sh
+# Strip Windows CRLF (safety net) + make executable
+RUN sed -i 's/\r$//' /usr/local/bin/backup.sh /usr/local/bin/entrypoint.sh \
+    && chmod +x /usr/local/bin/backup.sh /usr/local/bin/entrypoint.sh
 
 WORKDIR /backups
 

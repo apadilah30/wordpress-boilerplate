@@ -1,0 +1,31 @@
+# Auto-detect text files & normalize line endings ke LF di repo
+* text=auto eol=lf
+
+# Shell scripts & files yang di-execute di container Linux WAJIB LF
+*.sh          text eol=lf
+*.bash        text eol=lf
+Dockerfile*   text eol=lf
+Caddyfile*    text eol=lf
+*.cnf         text eol=lf
+*.ini         text eol=lf
+*.yml         text eol=lf
+*.yaml        text eol=lf
+
+# Windows batch files harus CRLF
+*.bat         text eol=crlf
+*.cmd         text eol=crlf
+*.ps1         text eol=crlf
+
+# Binary files (jangan diff/normalize)
+*.png         binary
+*.jpg         binary
+*.jpeg        binary
+*.gif         binary
+*.ico         binary
+*.woff        binary
+*.woff2       binary
+*.ttf         binary
+*.eot         binary
+*.zip         binary
+*.gz          binary
+*.tar         binary

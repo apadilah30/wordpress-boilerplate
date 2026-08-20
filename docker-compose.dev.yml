@@ -1,6 +1,14 @@
 # ==============================================================================
 # Dev overrides — build local, mount source, expose ports untuk debug.
 # Jalankan: docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# Design:
+# - Source code (config/, themes, mu-plugins, plugins-custom, composer.json)
+#   di-bind-mount dari host supaya edit langsung visible tanpa rebuild.
+# - Composer-managed folder (vendor/, web/wp/, web/app/plugins/) pakai NAMED
+#   VOLUME supaya persist antar restart tapi tidak polusi host filesystem.
+# - First-time setup: `composer install` jalan otomatis di entrypoint. Tunggu
+#   sampai selesai sebelum `wp core install` — lihat README.
 # ==============================================================================
 
 services:
@@ -12,29 +20,41 @@ services:
     image: wp-boilerplate:dev
     environment:
       APP_ENV: development
+      # Force Caddy to serve HTTP only in dev (no auto-HTTPS redirect).
+      # Prefix `http://` disables Caddy auto-HTTPS. Prod pakai domain tanpa prefix.
+      SERVER_NAME: http://localhost
     ports:
-      - "80:80"
-      - "443:443"
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
     volumes:
-      # Mount source: perubahan langsung visible tanpa rebuild
-      - ./composer.json:/app/composer.json
-      - ./composer.lock:/app/composer.lock
+      # --- Source code (bind mount dari host, editable via IDE) ---
+      - ./composer.json:/app/composer.json:ro
       - ./config:/app/config
-      - ./web/index.php:/app/web/index.php
-      - ./web/wp-config.php:/app/web/wp-config.php
+      - ./web/index.php:/app/web/index.php:ro
+      - ./web/wp-config.php:/app/web/wp-config.php:ro
       - ./web/app/mu-plugins:/app/web/app/mu-plugins
       - ./web/app/themes:/app/web/app/themes
       - ./plugins-custom:/app/plugins-custom
+      # --- Composer-managed ---
+      # vendor & plugins pakai named volume (persist antar restart, dependencies gede)
+      # WordPress core (/app/web/wp) SENGAJA tidak di-mount: roots/wordpress-core-installer
+      # rmdir folder ini dulu sebelum extract, dan mount point Docker tidak bisa di-rmdir.
+      # Biarin WP core hidup di container writable layer — re-install fast (~30s) karena
+      # package sudah di-cache di vendor/.
+      - vendor:/app/vendor
+      - plugins:/app/web/app/plugins
       - uploads:/app/web/app/uploads
-    # Xdebug butuh route ke host
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
   db:
     ports:
-      # Expose ke localhost supaya bisa connect dari DBeaver/TablePlus
-      - "3306:3306"
+      - "${DB_PORT:-3306}:3306"
 
   redis:
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT_HOST:-6379}:6379"
+
+volumes:
+  vendor:
+  plugins:
