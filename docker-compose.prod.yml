@@ -31,6 +31,9 @@ services:
     tmpfs:
       - /tmp
       - /run
+    volumes:
+      # app_source: expose /app dari container app ke backup service
+      - app_source:/app:ro
     logging:
       driver: json-file
       options:

@@ -5,7 +5,7 @@ Boilerplate WordPress produksi yang **ramah pemula tapi scalable**. Fokus: keama
 - **Runtime**: [FrankenPHP](https://frankenphp.dev/) (PHP 8.3, Caddy 2, HTTP/3, auto-HTTPS)
 - **WP framework**: [Roots Bedrock](https://roots.io/bedrock/) — WordPress managed via Composer
 - **Multi-stage env**: `development` / `staging` / `production`
-- **Auto backup**: MariaDB dump harian + rotasi 30d/8w/12m + uploads weekly snapshot
+- **Auto backup**: DB dump + full project snapshot + uploads harian pukul 03:00, retensi 30 hari (otomatis hapus backup >1 bulan)
 - **CI/CD**: GitHub Actions → GHCR → SSH deploy ke VPS, dengan pre-deploy backup & auto-rollback
 - **Plugin update safety**: automated weekly PR + smoke test + version pinning
 - **Security hardening**: berlapis (app, web, container, DB)
@@ -434,19 +434,60 @@ cat .last-deployed-tag.previous
 
 ## Backup & restore
 
-### Auto backup (jalan otomatis)
+### Apa yang di-backup
 
-Backup service jalan sebagai container di `docker-compose.yml`. Default:
-- **DB dump harian** jam 02:00 UTC (via `BACKUP_CRON` env)
-- **Retensi**: 30 daily + 8 weekly + 12 monthly
-- **Uploads snapshot**: mingguan
-- **Health marker**: `backups/last_success` di-update tiap sukses
+Setiap hari pukul **03:00** (waktu server), service `backup` otomatis menjalankan 3 hal:
+
+| Artefak | Lokasi di container | Format | Keterangan |
+|---------|---------------------|--------|------------|
+| DB dump | `/backups/db/` | `db-YYYY-MM-DD_HHMMSS.sql.gz` | mysqldump single-transaction gzip |
+| Project snapshot | `/backups/project/` | `project-YYYY-MM-DD_HHMMSS.tar.gz` | Seluruh `/app` kecuali `vendor/`, `web/wp/`, `web/app/plugins/` |
+| Uploads snapshot | `/backups/uploads/` | `uploads-YYYY-MM-DD_HHMMSS.tar.gz` | `/app/web/app/uploads` |
+
+Folder `vendor/`, `web/wp/`, dan `web/app/plugins/` dikecualikan dari project snapshot karena bisa di-regenerate via `composer install`.
+
+**Retensi**: backup lebih dari **30 hari** dihapus otomatis saat backup berikutnya berjalan.
+
+### Environment yang punya backup
+
+| Environment | Service backup aktif? |
+|-------------|----------------------|
+| Development | ✅ Ya |
+| Staging | ✅ Ya |
+| Production | ✅ Ya |
+| Local (docker-compose.yml saja tanpa override) | ❌ Tidak perlu |
+
+### Konfigurasi backup via env
+
+Di `.env` (atau `.env.production` / `.env.staging`):
+
+```bash
+# Jadwal backup (format cron, default: jam 03:00 tiap hari)
+BACKUP_CRON="0 3 * * *"
+
+# Berapa hari backup disimpan (default: 30 hari = 1 bulan)
+BACKUP_RETENTION_DAYS=30
+```
 
 ### Cek status backup
 
 ```bash
-docker compose exec backup ls -lh /backups/db/daily
+# Lihat isi backup
+docker compose exec backup ls -lh /backups/db/
+docker compose exec backup ls -lh /backups/project/
+docker compose exec backup ls -lh /backups/uploads/
+
+# Cek kapan backup terakhir sukses
 docker compose exec backup cat /backups/last_success
+
+# Lihat log backup
+docker compose logs backup --tail 50
+```
+
+### Jalankan backup manual (tanpa tunggu cron)
+
+```bash
+docker compose exec backup /usr/local/bin/backup.sh
 ```
 
 ### Restore manual
@@ -459,7 +500,7 @@ docker compose exec backup cat /backups/last_success
 ./scripts/restore-backup.sh --latest
 
 # Restore file spesifik
-./scripts/restore-backup.sh /backups/db/daily/db-2026-08-18_020001.sql.gz
+./scripts/restore-backup.sh /backups/db/db-2026-10-18_030001.sql.gz
 ```
 
 Script otomatis:
@@ -467,6 +508,24 @@ Script otomatis:
 2. Konfirmasi user (skip dengan `--yes`)
 3. Restore DB via `mysql` pipe
 4. Flush WP cache + rewrite rules
+
+### Backup off-site (opsional)
+
+Secara default backup disimpan di Docker volume `backups` di host. Untuk redundansi ke cloud (S3, B2, R2, dll), tambahkan di akhir `backup.sh`:
+
+```bash
+# Contoh rclone (install rclone di Dockerfile terlebih dahulu):
+# rclone sync /backups remote:wp-backups/
+
+# Contoh aws-cli ke S3:
+# aws s3 sync /backups s3://your-bucket/wp-backups/ --exclude "*.tmp"
+```
+
+Rebuild backup image setelah perubahan:
+```bash
+docker compose build backup
+docker compose up -d backup
+```
 
 ---
 
@@ -566,16 +625,7 @@ platforms: linux/amd64,linux/arm64
 
 ### Backup off-site (S3, B2, R2, dll)
 
-Edit `.docker/backup/backup.sh`, tambahkan di akhir:
-```bash
-# Contoh S3 pakai aws-cli:
-# aws s3 sync /backups s3://your-bucket/wp-backups/ --exclude "*.tmp"
-
-# Contoh rclone:
-# rclone sync /backups remote:wp-backups/
-```
-
-Rebuild backup image + update env vars.
+Lihat section [Backup off-site](#backup-off-site-opsional) di Backup & restore.
 
 ### Docker Secrets / Vault (multi-host)
 

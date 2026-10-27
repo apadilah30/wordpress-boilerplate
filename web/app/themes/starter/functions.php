@@ -24,3 +24,24 @@ add_action('after_setup_theme', static function (): void {
         'footer'  => __('Footer Menu', 'boilerplate-starter'),
     ]);
 });
+
+/**
+ * Enable Elementor for all public CPT with show_in_rest.
+ *
+ * Automatically detects CPT from CPT UI and enables Elementor support.
+ * No need to manually add each CPT slug.
+ */
+add_filter('elementor/utils/get_capable_post_types', static function (array $post_types): array {
+    $public_types = get_post_types([
+        'public'       => true,
+        'show_in_rest' => true,
+    ], 'names');
+
+    foreach ($public_types as $type) {
+        if (!in_array($type, $post_types, true)) {
+            $post_types[] = $type;
+        }
+    }
+
+    return $post_types;
+});

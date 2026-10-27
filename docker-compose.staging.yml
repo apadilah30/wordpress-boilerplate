@@ -23,6 +23,9 @@ services:
       - SETUID
       - SETGID
       - NET_BIND_SERVICE
+    volumes:
+      # app_source: expose /app dari container app ke backup service
+      - app_source:/app:ro
 
   db:
     # DB tidak expose ke host di staging
@@ -30,3 +33,11 @@ services:
 
   redis:
     ports: []
+
+  # Backup aktif di staging: backup DB + project setiap hari pukul 03:00
+  backup:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

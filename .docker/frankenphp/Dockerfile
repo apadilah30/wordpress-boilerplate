@@ -36,6 +36,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         unzip \
         default-mysql-client \
     && install-php-extensions \
+        exif \
         gd \
         imagick \
         intl \

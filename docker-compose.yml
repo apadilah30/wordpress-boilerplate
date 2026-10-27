@@ -98,7 +98,11 @@ services:
       retries: 5
 
   # --------------------------------------------------------------------
-  # Backup: daily mysqldump + rotate + weekly uploads tarball
+  # Backup: daily mysqldump + project snapshot + retention otomatis
+  # Backup dijalankan tiap hari pukul 03:00 (BACKUP_CRON).
+  # Backup lebih dari BACKUP_RETENTION_DAYS hari dihapus otomatis.
+  # Service ini TIDAK diaktifkan di local (docker-compose.local.yml tidak ada).
+  # Diaktifkan di dev, staging, dan production via override masing-masing.
   # --------------------------------------------------------------------
   backup:
     build:
@@ -107,17 +111,18 @@ services:
     image: wp-boilerplate/backup:latest
     restart: unless-stopped
     environment:
-      DB_HOST:     "${DB_HOST:-db}"
-      DB_NAME:     "${DB_NAME}"
-      DB_USER:     "${DB_USER}"
-      DB_PASSWORD: "${DB_PASSWORD}"
-      BACKUP_CRON:              "${BACKUP_CRON:-0 2 * * *}"
-      BACKUP_RETENTION_DAILY:   "${BACKUP_RETENTION_DAILY:-30}"
-      BACKUP_RETENTION_WEEKLY:  "${BACKUP_RETENTION_WEEKLY:-8}"
-      BACKUP_RETENTION_MONTHLY: "${BACKUP_RETENTION_MONTHLY:-12}"
+      DB_HOST:               "${DB_HOST:-db}"
+      DB_NAME:               "${DB_NAME}"
+      DB_USER:               "${DB_USER}"
+      DB_PASSWORD:           "${DB_PASSWORD}"
+      BACKUP_CRON:           "${BACKUP_CRON:-0 3 * * *}"
+      BACKUP_RETENTION_DAYS: "${BACKUP_RETENTION_DAYS:-30}"
+      PROJECT_DIR:           "/app"
     volumes:
       - backups:/backups
       - uploads:/uploads:ro
+      # Mount project read-only untuk full project snapshot
+      - app_source:/app:ro
     depends_on:
       db:
         condition: service_healthy
@@ -136,3 +141,4 @@ volumes:
   redis_data:
   uploads:
   backups:
+  app_source:

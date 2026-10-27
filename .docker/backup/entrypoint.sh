@@ -6,7 +6,7 @@
 
 set -euo pipefail
 
-BACKUP_CRON="${BACKUP_CRON:-0 2 * * *}"
+BACKUP_CRON="${BACKUP_CRON:-0 3 * * *}"
 CRONTAB_FILE="/etc/supercronic/crontab"
 
 mkdir -p /etc/supercronic
@@ -16,7 +16,7 @@ mkdir -p /etc/supercronic
 } > "${CRONTAB_FILE}"
 
 echo "[backup] cron schedule: ${BACKUP_CRON}"
-echo "[backup] backups dir: /backups (retention D=${BACKUP_RETENTION_DAILY:-30}, W=${BACKUP_RETENTION_WEEKLY:-8}, M=${BACKUP_RETENTION_MONTHLY:-12})"
+echo "[backup] backups dir: /backups (retention=${BACKUP_RETENTION_DAYS:-30} hari)"
 
 # Backup pertama kali langsung jalan supaya kita tahu koneksi DB OK
 if /usr/local/bin/backup.sh; then

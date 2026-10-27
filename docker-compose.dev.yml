@@ -44,6 +44,8 @@ services:
       - vendor:/app/vendor
       - plugins:/app/web/app/plugins
       - uploads:/app/web/app/uploads
+      # app_source: snapshot seluruh /app untuk backup service
+      - app_source:/app
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -54,6 +56,14 @@ services:
   redis:
     ports:
       - "${REDIS_PORT_HOST:-6379}:6379"
+
+  # Backup aktif di dev: backup DB + project setiap hari pukul 03:00
+  backup:
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   vendor:

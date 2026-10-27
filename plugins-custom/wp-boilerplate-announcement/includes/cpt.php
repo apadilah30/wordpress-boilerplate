@@ -37,20 +37,29 @@ function wpba_register_post_type(): void {
 		array(
 			'labels'            => $labels,
 			'description'       => __( 'Site-wide announcement banners.', 'wp-boilerplate-announcement' ),
-			'public'            => false,
+			'public'            => true,
+			'publicly_queryable'=> true,
 			'show_ui'           => true,
 			'show_in_menu'      => true,
 			'show_in_rest'      => true,
 			'menu_icon'         => 'dashicons-megaphone',
 			'menu_position'     => 25,
 			'capability_type'   => 'post',
-			'supports'          => array( 'title', 'editor', 'excerpt' ),
+			'supports'          => array( 'title', 'editor', 'excerpt', 'elementor', 'custom-fields' ),
 			'has_archive'       => false,
-			'rewrite'           => false,
-			'query_var'         => false,
+			'rewrite'           => array( 'slug' => 'announcement' ),
+			'query_var'         => true,
 			'delete_with_user'  => false,
 		)
 	);
+}
+
+// Enable Elementor for this CPT.
+add_filter( 'elementor/utils/get_capable_post_types', 'wpba_enable_elementor_for_cpt' );
+
+function wpba_enable_elementor_for_cpt( array $post_types ): array {
+	$post_types[] = WPBA_POST_TYPE;
+	return $post_types;
 }
 
 add_action( 'init', 'wpba_register_post_meta' );
