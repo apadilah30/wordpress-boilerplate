@@ -1,0 +1,144 @@
+/**
+ * Social Media Showcase - Styles
+ */
+
+.wpss-wrapper {
+    --wpss-color-primary: #1b3a5c;
+    --wpss-color-accent: #e3a73c;
+    --wpss-color-muted: #6b7280;
+
+    display: block;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.wpss-wrapper *,
+.wpss-wrapper *::before,
+.wpss-wrapper *::after {
+    box-sizing: border-box;
+}
+
+.wpss-empty {
+    padding: 1rem;
+    color: var(--wpss-color-muted);
+}
+
+.wpss-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--wpss-color-primary);
+    margin: 0 0 1rem;
+}
+
+/* --- Tabs + Open button row --- */
+.wpss-tabs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+}
+
+.wpss-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: #f1f1f1;
+    color: var(--wpss-color-muted);
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+    flex: 0 0 auto;
+}
+
+.wpss-tab i,
+.wpss-tab svg {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+.wpss-tab.active {
+    background: var(--wpss-color-accent);
+    color: #fff;
+}
+
+.wpss-tab-label {
+    /* Visually hidden, kept for screen readers / title tooltip already
+       covers sighted users via the button's title attribute. */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.wpss-open-btn {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1.25rem;
+    background: var(--wpss-color-primary);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.wpss-open-btn:hover {
+    opacity: 0.9;
+}
+
+/* --- Gallery panels --- */
+.wpss-panels {
+    position: relative;
+}
+
+.wpss-panel {
+    display: none;
+}
+
+.wpss-panel.active {
+    display: block;
+}
+
+.wpss-gallery {
+    display: grid;
+    grid-template-columns: repeat(var(--wpss-gallery-columns, 4), 1fr);
+    gap: 8px;
+}
+
+.wpss-gallery-item {
+    display: block;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 6px;
+}
+
+.wpss-gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.25s ease;
+}
+
+.wpss-gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+/* --- Responsive --- */
+@media (max-width: 600px) {
+    .wpss-gallery {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .wpss-open-btn {
+        padding: 0.4rem 1rem;
+        font-size: 0.8rem;
+    }
+}

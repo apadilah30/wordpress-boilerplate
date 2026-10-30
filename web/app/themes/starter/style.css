@@ -116,7 +116,9 @@ Text Domain: boilerplate-starter
 }
 
 .dropdown:hover > .sub-menu,
-.dropdown:focus-within > .sub-menu {
+.dropdown:focus-within > .sub-menu,
+.menu-item-has-children:hover > .sub-menu,
+.menu-item-has-children:focus-within > .sub-menu {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);

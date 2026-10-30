@@ -1,0 +1,1137 @@
+/**
+ * Taxonomy Grid - Styles
+ *
+ * COLOR CUSTOMIZATION
+ * --------------------
+ * All colors are CSS custom properties on .wptg-wrapper. Override them in
+ * your theme's stylesheet or Additional CSS (Customizer) WITHOUT touching
+ * this file, e.g.:
+ *
+ *   .wptg-wrapper {
+ *       --wptg-color-primary: #0a2540;
+ *       --wptg-color-accent: #ff6b00;
+ *   }
+ */
+
+.wptg-wrapper {
+    --wptg-color-primary: #1b3a5c;
+    --wptg-color-primary-dark: #142c47;
+    --wptg-color-accent: #e3a73c;
+    --wptg-color-text: #2c2c2c;
+    --wptg-color-muted: #6b7280;
+    --wptg-color-border: #ebebeb;
+    --wptg-color-bg: #ffffff;
+    --wptg-color-bg-muted: #f7f7f8;
+    --wptg-radius: 6px;
+    /*
+     * Explicit sans-serif stack. Minimal themes (like this project's
+     * "starter" theme) may not declare any font-family at all, which makes
+     * browsers fall back to a serif default (Times New Roman) — a jarring
+     * mismatch against most modern designs. Override here so this widget
+     * always renders sans-serif regardless of theme CSS.
+     */
+    --wptg-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, sans-serif;
+
+    display: block;
+    background: var(--wptg-color-bg);
+    font-family: var(--wptg-font-family);
+}
+
+.wptg-wrapper *,
+.wptg-wrapper *::before,
+.wptg-wrapper *::after {
+    box-sizing: border-box;
+}
+
+.wptg-error {
+    color: #b91c1c;
+    padding: 1rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--wptg-radius);
+}
+
+/* ==========================================================================
+   DETAIL MODE
+   ========================================================================== */
+
+/* --- Outer wrapper (whole-widget margin/padding/max-width/alignment) --- */
+.wptg-wrapper {
+    width: 100%;
+}
+
+/* --- Section containers: "Top" (header) and "Body" (breadcrumb+sidebar+content) --- */
+.wptg-section-top,
+.wptg-section-body {
+    width: 100%;
+}
+
+/* --- Header banner --- */
+.wptg-header {
+    background: var(--wptg-color-primary);
+    color: #fff;
+    padding: 2.5rem 2rem;
+    position: relative;
+}
+
+.wptg-header-flex {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.wptg-header-inner {
+    text-align: center;
+    max-width: 100%;
+}
+
+/* Decorative lines flanking the header text. Real flex-item elements (not
+   pseudo-elements) so Elementor's margin/padding controls meaningfully
+   reposition them, and they can be hidden independently per breakpoint. */
+.wptg-header-line {
+    flex: 0 0 auto;
+    display: block;
+    width: var(--wptg-header-divider-width, 120px);
+    height: var(--wptg-header-divider-thickness, 2px);
+    background: var(--wptg-header-divider-color, var(--wptg-color-accent));
+}
+
+.wptg-header-subtitle {
+    display: block;
+    font-size: 1rem;
+    font-weight: 400;
+    color: #fff;
+    margin: 0 0 0.4rem;
+    letter-spacing: 0.02em;
+}
+
+.wptg-header-title {
+    display: block;
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--wptg-color-accent);
+    margin: 0;
+    line-height: 1.3;
+}
+
+/* --- Breadcrumb --- */
+.wptg-breadcrumb {
+    padding: 0.9rem 2rem;
+    font-size: 0.85rem;
+    color: var(--wptg-color-muted);
+    overflow-x: auto;
+}
+
+.wptg-breadcrumb ol {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.6rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+}
+
+.wptg-breadcrumb a {
+    color: var(--wptg-color-muted);
+    text-decoration: none;
+}
+
+.wptg-breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.wptg-breadcrumb-current {
+    color: var(--wptg-color-text);
+    font-weight: 600;
+}
+
+.wptg-breadcrumb-sep {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75em;
+    font-weight: 700;
+}
+
+/* Target the icon element directly, not just the <li> wrapper — font
+   icons (<i>) inherit `color` fine, but SVG icons need `fill` explicitly
+   since SVG shapes don't follow `color` automatically. */
+.wptg-breadcrumb-sep i {
+    color: var(--wptg-color-accent);
+}
+
+.wptg-breadcrumb-sep svg {
+    fill: var(--wptg-color-accent);
+    width: 0.8em;
+    height: 0.8em;
+}
+
+/* --- Body layout --- */
+.wptg-body {
+    display: flex;
+    gap: 2.25rem;
+    padding: 1.75rem 2rem;
+    align-items: flex-start;
+}
+
+.wptg-sidebar {
+    flex: 0 0 280px;
+    min-width: 240px;
+}
+
+.wptg-detail-container {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+}
+
+/* --- Search box --- */
+.wptg-search {
+    position: relative;
+    margin: 0 0 1.75rem;
+}
+
+.wptg-search-input {
+    width: 100%;
+    padding: 0.7rem 2.75rem 0.7rem 1.1rem;
+    border: 1px solid var(--wptg-color-border);
+    border-radius: var(--wptg-search-radius, 20px);
+    background: var(--wptg-color-bg-muted);
+    font-size: 0.9rem;
+    color: var(--wptg-color-text);
+}
+
+.wptg-search-input::placeholder {
+    color: var(--wptg-color-muted);
+}
+
+.wptg-search-input:focus {
+    outline: 2px solid var(--wptg-color-accent);
+    outline-offset: 1px;
+}
+
+.wptg-search-icon {
+    position: absolute;
+    right: 0.95rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 0.95rem;
+    display: inline-flex;
+}
+
+.wptg-search-icon i {
+    color: var(--wptg-color-muted);
+}
+
+.wptg-search-icon svg {
+    fill: var(--wptg-color-muted);
+    width: 1em;
+    height: 1em;
+}
+
+/* --- Sidebar term groups (accordion) ---
+   Short horizontal "tick" divider beside the category name, instead of a
+   full-height vertical bar — a real flex-item element (not a pseudo
+   element) so margin/padding meaningfully reposition it. */
+.wptg-term-group {
+    margin-bottom: 1.5rem;
+}
+
+.wptg-term-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+/* Divider is now a CHILD of its button (.wptg-term-toggle /
+   .wptg-term-merged-trigger), not a sibling — required so "Position:
+   Absolute" can anchor to the button itself via CSS (absolute always
+   anchors to the nearest POSITIONED ANCESTOR, which must be an actual
+   ancestor in the DOM, not a sibling). Default is static (part of the
+   normal flex flow, just like before); switching to Absolute plus
+   Horizontal/Vertical Alignment is done entirely from the Elementor
+   Style controls — no hardcoded position here. */
+.wptg-term-divider {
+    flex: 0 0 auto;
+    display: block;
+    pointer-events: none;
+}
+
+.wptg-term-divider-accordion {
+    width: var(--wptg-divider-acc-width, 14px);
+    height: var(--wptg-divider-acc-thickness, 2px);
+    background: var(--wptg-divider-acc-color, var(--wptg-color-accent));
+}
+
+.wptg-term-divider-merged {
+    width: var(--wptg-divider-merged-width, 14px);
+    height: var(--wptg-divider-merged-thickness, 2px);
+    background: var(--wptg-divider-merged-color, var(--wptg-color-accent));
+}
+
+.wptg-term-toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    background: none;
+    border: none;
+    padding: 0.2rem 0;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--wptg-color-primary);
+    text-align: left;
+}
+
+.wptg-term-head-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+/* inline-block so Margin/Padding/Background/Border-Radius controls
+   (Style > Sidebar/Accordion > Category Name) render as a real box
+   around the text, not just a color-only inline span. */
+.wptg-term-name,
+.wptg-category-name {
+    display: inline-block;
+}
+
+.wptg-term-chevron {
+    flex: 0 0 auto;
+    display: inline-block;
+    width: 0;
+    height: 0;
+    margin-left: var(--wptg-chevron-margin, 0px);
+    border-left: var(--wptg-chevron-size, 5px) solid transparent;
+    border-right: var(--wptg-chevron-size, 5px) solid transparent;
+    border-bottom: calc(var(--wptg-chevron-size, 5px) + 1px) solid var(--wptg-chevron-color, var(--wptg-color-accent));
+    transition: transform 0.2s ease;
+}
+
+.wptg-term-group:not(.open) .wptg-term-chevron {
+    transform: rotate(180deg);
+}
+
+.wptg-term-posts {
+    list-style: none;
+    margin: 0.6rem 0 0;
+    padding: 0 0 0 1.4rem;
+    max-height: 2000px;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+}
+
+.wptg-term-group:not(.open) .wptg-term-posts {
+    max-height: 0;
+}
+
+.wptg-post-li {
+    margin-bottom: 0.2rem;
+}
+
+.wptg-post-trigger {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--wptg-radius);
+    font-size: 0.88rem;
+    color: var(--wptg-color-text);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.wptg-post-trigger:hover {
+    background-color: var(--wptg-color-bg-muted);
+}
+
+.wptg-post-li.active .wptg-post-trigger,
+.wptg-term-merged.active .wptg-post-trigger {
+    background-color: var(--wptg-color-accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Merged row: a category that has exactly one post sharing its name —
+   shown as a single row (divider + button) acting as both the category
+   label and the clickable post trigger, no chevron/expand needed.
+   Overrides .wptg-post-trigger's own padding (meant for indented items
+   inside .wptg-term-posts) so it aligns flush with a normal category
+   header's text instead of appearing shifted/padded. */
+.wptg-term-merged-trigger {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1 1 auto;
+    width: auto;
+    padding: 0.2rem 0;
+    font-weight: 700;
+    transition: padding 0.2s ease, border-radius 0.2s ease;
+}
+
+/* Divider position/size/color for the merged button is fully controlled
+   via Style > Category Divider (Merged) — including switching to
+   Absolute + custom alignment if a floating/overlapping look is wanted.
+   Positioning/sizing of the button itself for each state (e.g. pushing
+   it flush left on Active) is controlled via Style > Category Name
+   (Merged) > Margin/Padding, not hardcoded here. */
+
+.wptg-no-results {
+    padding: 0.75rem;
+    color: var(--wptg-color-muted);
+    font-size: 0.85rem;
+}
+
+/* --- Detail content (right panel) --- */
+.wptg-detail-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--wptg-color-primary);
+    margin: 0 0 1.25rem;
+}
+
+.wptg-detail-content {
+    color: var(--wptg-color-text);
+    line-height: 1.75;
+}
+
+.wptg-detail-content h1,
+.wptg-detail-content h2,
+.wptg-detail-content h3,
+.wptg-detail-content h4 {
+    color: var(--wptg-color-accent);
+}
+
+.wptg-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 240px;
+    background: var(--wptg-color-bg-muted);
+    border-radius: var(--wptg-radius);
+    color: var(--wptg-color-muted);
+}
+
+/* ==========================================================================
+   GRID MODE (legacy)
+   ========================================================================== */
+
+.wptg-wrapper.wptg-mode-grid {
+    display: flex;
+    gap: 2rem;
+    padding: 1.5rem;
+}
+
+.wptg-categories {
+    flex: 0 0 280px;
+    min-width: 250px;
+}
+
+.wptg-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--wptg-color-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--wptg-color-border);
+}
+
+.wptg-categories-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.wptg-category-item {
+    margin-bottom: 0.25rem;
+}
+
+.wptg-category-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--wptg-color-bg-muted);
+    border: none;
+    border-radius: var(--wptg-radius);
+    cursor: pointer;
+    text-align: left;
+    font-size: 0.95rem;
+    color: var(--wptg-color-text);
+    transition: all 0.2s ease;
+}
+
+.wptg-category-btn:hover {
+    background-color: var(--wptg-color-border);
+}
+
+.wptg-category-item.active .wptg-category-btn {
+    background-color: var(--wptg-color-primary);
+    color: #fff;
+}
+
+.wptg-count {
+    font-size: 0.85rem;
+    opacity: 0.7;
+}
+
+.wptg-posts-container {
+    flex: 1;
+    min-width: 0;
+}
+
+.wptg-empty {
+    padding: 2rem;
+    text-align: center;
+    color: var(--wptg-color-muted);
+}
+
+.wptg-posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.wptg-post-item {
+    background: var(--wptg-color-bg);
+    border: 1px solid var(--wptg-color-border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.wptg-post-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.wptg-post-fallback {
+    padding: 1.5rem;
+}
+
+.wptg-post-thumbnail {
+    margin: -1.5rem -1.5rem 1rem;
+    overflow: hidden;
+}
+
+.wptg-post-thumbnail img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.wptg-post-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+    color: var(--wptg-color-primary);
+}
+
+.wptg-post-excerpt {
+    font-size: 0.9rem;
+    color: var(--wptg-color-muted);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.wptg-post-link {
+    display: inline-block;
+    color: var(--wptg-color-accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.wptg-post-link:hover {
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   SECTIONS MODE — Content Navigator
+   ========================================================================== */
+
+.wptg-sections-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.wptg-sections-content {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+}
+
+.wptg-section-group--flat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* --- Per-section search (shared box styling, reuses legacy search look) --- */
+.wptg-section-search {
+    position: relative;
+    margin: 0 0 0.75rem;
+}
+
+.wptg-section-search-input {
+    width: 100%;
+    padding: 0.7rem 1.1rem;
+    border: 1px solid var(--wptg-color-border);
+    border-radius: 20px;
+    background: var(--wptg-color-bg-muted);
+    font-size: 0.9rem;
+    color: var(--wptg-color-text);
+}
+
+.wptg-section-search-input::placeholder {
+    color: var(--wptg-color-muted);
+}
+
+.wptg-section-search-input:focus {
+    outline: 2px solid var(--wptg-color-accent);
+    outline-offset: 1px;
+}
+
+.wptg-section-no-results {
+    padding: 0.5rem 0.25rem;
+    color: var(--wptg-color-muted);
+    font-size: 0.85rem;
+}
+
+/* --- Flat nav trigger (Berita Terbaru / Pengumuman sidebar button) --- */
+.wptg-section-nav-trigger {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 0.7rem 0.9rem;
+    border-radius: var(--wptg-radius);
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--wptg-color-text);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.wptg-section-nav-trigger:hover {
+    background-color: var(--wptg-color-bg-muted);
+}
+
+.wptg-section-nav-trigger.active {
+    background-color: var(--wptg-color-accent);
+    color: #fff;
+}
+
+/* --- Taxonomy accordion (Galeri Foto / Galeri Video sidebar) — reuses the
+   legacy .wptg-term-toggle/.wptg-term-chevron look via shared classes;
+   only the ANCESTOR open/closed rules are new here. --- */
+.wptg-section-toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 0.2rem 0;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--wptg-color-primary);
+    text-align: left;
+}
+
+.wptg-section-terms {
+    list-style: none;
+    margin: 0.6rem 0 0;
+    padding: 0 0 0 1.4rem;
+    max-height: 2000px;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+}
+
+/* Open/closed state lives on the ANCESTOR .wptg-section-group (never on
+   the <ul> itself), matching bindAccordionToggle()'s own toggle target and
+   the legacy .wptg-term-group:not(.open) .wptg-term-posts convention. */
+.wptg-section-group:not(.open) .wptg-section-terms {
+    max-height: 0;
+}
+
+.wptg-section-term-li {
+    margin-bottom: 0.2rem;
+}
+
+.wptg-section-term-trigger {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 0.6rem 0.9rem;
+    border-radius: var(--wptg-radius);
+    font-size: 0.88rem;
+    color: var(--wptg-color-text);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.wptg-section-term-trigger:hover {
+    background-color: var(--wptg-color-bg-muted);
+}
+
+.wptg-section-term-li.active .wptg-section-term-trigger {
+    background-color: var(--wptg-color-accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+/* single_detail's nested term->post tree reuses the legacy
+   .wptg-term-posts/.wptg-post-li/.wptg-post-trigger CSS verbatim — only
+   the ANCESTOR open/closed target differs (.wptg-section-term-li instead
+   of .wptg-term-group). */
+.wptg-section-term-li:not(.open) .wptg-term-posts {
+    max-height: 0;
+}
+
+/* --- Numbered feed (Berita Terbaru / Pengumuman content panel) --- */
+.wptg-numbered-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.wptg-feed-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    cursor: pointer;
+    border-radius: var(--wptg-radius);
+    transition: background 0.15s ease;
+}
+
+.wptg-feed-item:hover {
+    background-color: var(--wptg-color-bg-muted);
+}
+
+.wptg-feed-item--featured {
+    align-items: stretch;
+}
+
+.wptg-feed-item--featured .wptg-feed-thumb {
+    flex: 0 0 220px;
+}
+
+.wptg-feed-thumb {
+    position: relative;
+    flex: 0 0 140px;
+    border-radius: var(--wptg-radius);
+    overflow: hidden;
+}
+
+.wptg-feed-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.wptg-feed-badge {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--wptg-color-primary);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 4px;
+}
+
+.wptg-feed-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.wptg-feed-date {
+    font-size: 0.8rem;
+    color: var(--wptg-color-muted);
+}
+
+.wptg-feed-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--wptg-color-primary);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.wptg-feed-readmore {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--wptg-color-accent);
+}
+
+/* --- Grid thumbnail (Galeri Foto content panel) — reuses .wptg-post-item
+   from legacy grid mode; only the --photo caption area is new. --- */
+.wptg-post-item--photo {
+    cursor: pointer;
+}
+
+.wptg-photo-thumb {
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+}
+
+.wptg-photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.wptg-photo-caption {
+    padding: 1rem;
+}
+
+.wptg-photo-title {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--wptg-color-primary);
+    margin-bottom: 0.25rem;
+}
+
+.wptg-photo-date {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--wptg-color-muted);
+}
+
+/* --- List thumbnail (Galeri Video content panel) --- */
+.wptg-list-thumbnail {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.wptg-list-thumbnail-item {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    cursor: pointer;
+    border-radius: var(--wptg-radius);
+    transition: background 0.15s ease;
+}
+
+.wptg-list-thumbnail-item:hover {
+    background-color: var(--wptg-color-bg-muted);
+}
+
+.wptg-list-thumbnail-media {
+    position: relative;
+    flex: 0 0 200px;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--wptg-radius);
+    overflow: hidden;
+    background: var(--wptg-color-bg-muted);
+}
+
+.wptg-list-thumbnail-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.wptg-list-thumbnail-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--wptg-play-size, 48px);
+    height: var(--wptg-play-size, 48px);
+    margin: calc(var(--wptg-play-size, 48px) / -2) 0 0 calc(var(--wptg-play-size, 48px) / -2);
+    border-radius: 50%;
+    background: var(--wptg-play-color, rgba(255, 255, 255, 0.85));
+    pointer-events: none;
+}
+
+.wptg-list-thumbnail-play::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 55%;
+    width: 0;
+    height: 0;
+    transform: translate(-50%, -50%);
+    border-style: solid;
+    border-width: 0.4em 0 0.4em 0.7em;
+    border-color: transparent transparent transparent var(--wptg-color-primary);
+}
+
+.wptg-list-thumbnail-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.wptg-list-thumbnail-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--wptg-color-primary);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.wptg-list-thumbnail-meta {
+    font-size: 0.85rem;
+    color: var(--wptg-color-muted);
+}
+
+/* --- Load more --- */
+.wptg-load-more {
+    display: block;
+    margin: 1.5rem auto 0;
+    padding: 0.65rem 1.5rem;
+    background: var(--wptg-color-bg-muted);
+    border: 1px solid var(--wptg-color-border);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--wptg-color-primary);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.wptg-load-more:hover {
+    background-color: var(--wptg-color-border);
+}
+
+/* ==========================================================================
+   MODAL (shared lightbox)
+   ========================================================================== */
+
+.wptg-modal[hidden] {
+    display: none;
+}
+
+.wptg-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wptg-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.65);
+}
+
+.wptg-modal-panel {
+    position: relative;
+    z-index: 1;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: var(--wptg-color-bg, #fff);
+    border-radius: var(--wptg-radius);
+    padding: 2rem;
+}
+
+.wptg-modal-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    font-size: 1.75rem;
+    line-height: 1;
+    color: var(--wptg-color-muted);
+    cursor: pointer;
+}
+
+.wptg-modal-body img,
+.wptg-modal-body video {
+    display: block;
+    max-width: 100%;
+    max-height: 70vh;
+    margin: 0 auto;
+}
+
+.wptg-modal-caption {
+    margin-top: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
+}
+
+.wptg-modal-caption-title {
+    font-weight: 700;
+    color: var(--wptg-color-primary);
+}
+
+.wptg-modal-caption-date {
+    font-size: 0.85rem;
+    color: var(--wptg-color-muted);
+}
+
+/* ==========================================================================
+   SHARED — loading state & animation
+   ========================================================================== */
+
+.wptg-loading {
+    position: relative;
+    opacity: 0.6;
+    pointer-events: none;
+    min-height: 120px;
+}
+
+.wptg-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    margin: -20px 0 0 -20px;
+    border: 4px solid var(--wptg-color-border);
+    border-top: 4px solid var(--wptg-color-accent);
+    border-radius: 50%;
+    animation: wptg-spin 1s linear infinite;
+}
+
+@keyframes wptg-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .wptg-header {
+        padding: 1.75rem 1rem;
+    }
+
+    .wptg-header-line {
+        display: none;
+    }
+
+    .wptg-header-title {
+        font-size: 1.3rem;
+    }
+
+    .wptg-header-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .wptg-breadcrumb {
+        padding: 0.65rem 1rem;
+        font-size: 0.78rem;
+    }
+
+    .wptg-body {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 1.25rem;
+    }
+
+    .wptg-sidebar {
+        flex: none;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .wptg-detail-title {
+        font-size: 1.3rem;
+    }
+
+    /* Grid mode */
+    .wptg-wrapper.wptg-mode-grid {
+        flex-direction: column;
+        padding: 1rem;
+        gap: 1.25rem;
+    }
+
+    .wptg-categories {
+        flex: none;
+        width: 100%;
+    }
+
+    .wptg-posts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Sections mode */
+    .wptg-sections-body {
+        flex-direction: column;
+    }
+
+    .wptg-sections-sidebar {
+        flex: none;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .wptg-feed-item,
+    .wptg-feed-item--featured,
+    .wptg-list-thumbnail-item {
+        flex-direction: column;
+    }
+
+    .wptg-feed-thumb,
+    .wptg-feed-item--featured .wptg-feed-thumb,
+    .wptg-list-thumbnail-media {
+        flex: none;
+        width: 100%;
+    }
+
+    .wptg-modal-panel {
+        max-width: 100vw;
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .wptg-header-inner {
+        padding: 0 0.5rem;
+    }
+}

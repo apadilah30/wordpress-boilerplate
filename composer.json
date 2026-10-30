@@ -62,7 +62,10 @@
         "wpackagist-plugin/loco-translate": "2.8.8",
         "wpackagist-plugin/shortcodes-ultimate": "7.8.4",
         "wpackagist-plugin/members": "3.2.26",
-        "boilerplate/wp-boilerplate-announcement": "*"
+        "boilerplate/wp-boilerplate-announcement": "*",
+        "boilerplate/wp-taxonomy-grid": "*",
+        "boilerplate/wp-content-grid": "*",
+        "boilerplate/wp-social-showcase": "*"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "^3.10",

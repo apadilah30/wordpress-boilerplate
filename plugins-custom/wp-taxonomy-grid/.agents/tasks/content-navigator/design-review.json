@@ -1,0 +1,55 @@
+{
+  "verdict": "CHANGES_REQUESTED",
+  "findings": [
+    {
+      "id": 1,
+      "severity": "HIGH",
+      "title": "Sections-mode accordion's \"open\" class target mismatch between SSR markup, JS toggle, and the existing CSS convention",
+      "location": "design.md: wptg_render_section_sidebar_group() markup; initSectionsMode()'s bindAccordionToggle() call sites",
+      "fix": "Either move the `open` class in the PHP templates from the inner <ul> onto the ancestor (.wptg-section-group / .wptg-section-term-li) and add CSS rules `.wptg-section-group:not(.open) .wptg-section-terms{...}` / `.wptg-section-term-li:not(.open) .wptg-term-posts{...}` mirroring the existing `.wptg-term-group:not(.open) .wptg-term-posts` rule, OR change bindAccordionToggle()'s call sites to target the actual <ul> element instead of the ancestor and write CSS against `.open` on that element directly. State which, consistently."
+    },
+    {
+      "id": 2,
+      "severity": "HIGH",
+      "title": "Three functions are called/relied upon but never defined (setActiveItem, generalized loadSinglePost, modified wptg_ajax_get_single_post)",
+      "location": "design.md: handleItemClick() calls setActiveItem(); 'File organization' table's prose-only description of loadSinglePost()'s new signature; 'wptg_render_single_post_detail() modification' callers table's prose-only description of wptg_ajax_get_single_post()'s new include_meta handling",
+      "fix": "Write full bodies for setActiveItem(wrapper, item), the 4-parameter loadSinglePost(wrapper, postId, postType, includeMeta) (with includeMeta defaulting falsy so existing 3-arg call sites stay byte-identical), and the modified wptg_ajax_get_single_post() PHP function reading $_POST['include_meta']."
+    },
+    {
+      "id": 3,
+      "severity": "MEDIUM",
+      "title": "Misattributed claim that wptg_ajax_get_posts() already validates taxonomy-registered-for-post-type",
+      "location": "design.md: paragraph following wptg_ajax_query_section_items()'s code block",
+      "fix": "Reword to attribute the stronger check to wptg_resolve_and_render() only; wptg_ajax_get_posts() (verified in wp-taxonomy-grid.php lines 738-759) does not perform that check or validate the term belongs to the taxonomy."
+    },
+    {
+      "id": 4,
+      "severity": "MEDIUM",
+      "title": "Missing data-term-name attribute on .wptg-section-term-li breaks filterTermGroup()'s category-name matching for Sections-mode accordions",
+      "location": "design.md: wptg_render_section_sidebar_group()'s <li class=\"wptg-section-term-li\"> markup vs. filterTermGroup()'s groupEl.dataset.termName read",
+      "fix": "Add data-term-name=\"<?php echo esc_attr(strtolower($term->name)); ?>\" to the <li class=\"wptg-section-term-li ...\"> tag, matching the legacy .wptg-term-group convention."
+    },
+    {
+      "id": 5,
+      "severity": "MEDIUM",
+      "title": "Single shared debounce() instance for the whole sidebar can drop a pending search from a different section's input",
+      "location": "design.md: initSectionsMode()'s `sidebar.addEventListener('input', debounce(function (e) {...}, 300))`",
+      "fix": "Debounce per input element (e.g. a WeakMap of input -> debounced handler) instead of wrapping one shared delegated listener for the entire sidebar."
+    },
+    {
+      "id": 6,
+      "severity": "MEDIUM",
+      "title": "No validation/default for a repeater row with no section_post_type selected; the section silently vanishes with zero feedback",
+      "location": "design.md: section_post_type repeater control (no default) and wptg_normalize_section_row()'s first check",
+      "fix": "Give section_post_type a non-empty default (matching the top-level wptg_post_type control's 'default' => 'post'), or have the renderer show a visibly-disabled 'not configured' entry instead of silently dropping the row; document the chosen behavior in requirements.md's acceptance criteria."
+    },
+    {
+      "id": 7,
+      "severity": "NIT",
+      "title": "Dead .wptg-section-no-results markup rendered (but never toggled) for flat_list sections",
+      "location": "design.md: wptg_render_section_sidebar_group()'s unconditional <p class=\"wptg-section-no-results\"> for any enable_search section",
+      "fix": "Gate the no-results paragraph on $section['type'] !== 'flat_list', since flat_list sections re-query via AJAX and never use this DOM-filter-only element."
+    }
+  ],
+  "reviewDoc": "c:/projects/imigrasi-wp/plugins-custom/wp-taxonomy-grid/.agents/tasks/content-navigator/design-review.md"
+}

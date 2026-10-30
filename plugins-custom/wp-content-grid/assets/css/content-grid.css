@@ -1,0 +1,276 @@
+/**
+ * Content Grid - Styles
+ *
+ * COLOR CUSTOMIZATION: use Elementor Style tab controls — this file only
+ * provides sensible defaults. See readme.txt for the full control list.
+ */
+
+.wpcg-wrapper {
+    --wpcg-color-primary: #1b3a5c;
+    --wpcg-color-accent: #e3a73c;
+    --wpcg-color-text: #2c2c2c;
+    --wpcg-color-muted: #6b7280;
+    --wpcg-color-bg-muted: #f7f5f2;
+    --wpcg-radius: 10px;
+
+    display: block;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.wpcg-wrapper *,
+.wpcg-wrapper *::before,
+.wpcg-wrapper *::after {
+    box-sizing: border-box;
+}
+
+.wpcg-error,
+.wpcg-empty {
+    padding: 1rem;
+    color: var(--wpcg-color-muted);
+}
+
+/* --- Section header --- */
+.wpcg-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.wpcg-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--wpcg-color-primary);
+    margin: 0;
+}
+
+.wpcg-view-all {
+    flex: 0 0 auto;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--wpcg-color-muted);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.wpcg-view-all:hover {
+    color: var(--wpcg-color-accent);
+}
+
+/* ==========================================================================
+   NEWS LAYOUT
+   ========================================================================== */
+
+.wpcg-news-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--wpcg-news-columns, 4), 1fr);
+    gap: 24px;
+}
+
+.wpcg-news-card {
+    background: var(--wpcg-color-bg-muted);
+    border-radius: var(--wpcg-radius);
+    overflow: hidden;
+}
+
+.wpcg-news-card-featured {
+    grid-column: span 2;
+    display: flex;
+}
+
+.wpcg-news-card-regular {
+    grid-column: span 1;
+}
+
+.wpcg-news-card-link {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+}
+
+.wpcg-news-card-featured .wpcg-news-card-link {
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.wpcg-news-thumb {
+    flex: 0 0 45%;
+    overflow: hidden;
+}
+
+.wpcg-news-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    min-height: 160px;
+}
+
+.wpcg-news-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    min-width: 0;
+}
+
+.wpcg-news-badge {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--wpcg-color-accent);
+    line-height: 1;
+}
+
+.wpcg-news-card-regular .wpcg-news-badge {
+    font-size: 1.1rem;
+}
+
+.wpcg-news-date {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--wpcg-color-muted);
+    margin: 0.5rem 0 0.4rem;
+}
+
+.wpcg-news-card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--wpcg-color-primary);
+    line-height: 1.35;
+    margin: 0 0 0.75rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.wpcg-news-card-regular .wpcg-news-card-title {
+    font-size: 0.92rem;
+    -webkit-line-clamp: 3;
+}
+
+.wpcg-news-read-more {
+    margin-top: auto;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--wpcg-color-accent);
+}
+
+.wpcg-news-card-link:hover .wpcg-news-card-title {
+    color: var(--wpcg-color-accent);
+}
+
+/* ==========================================================================
+   VIDEO LAYOUT
+   ========================================================================== */
+
+.wpcg-video-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--wpcg-video-columns, 2), 1fr);
+    gap: 24px;
+}
+
+.wpcg-video-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.wpcg-video-thumb {
+    position: relative;
+    border-radius: var(--wpcg-radius);
+    overflow: hidden;
+    background: var(--wpcg-color-bg-muted);
+    aspect-ratio: 16 / 9;
+}
+
+.wpcg-video-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.wpcg-video-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--wpcg-color-accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+.wpcg-video-play svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+}
+
+.wpcg-video-card-link:hover .wpcg-video-play {
+    transform: translate(-50%, -50%) scale(1.08);
+}
+
+.wpcg-video-body {
+    padding-top: 0.9rem;
+}
+
+.wpcg-video-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--wpcg-color-primary);
+    margin: 0 0 0.35rem;
+}
+
+.wpcg-video-card-link:hover .wpcg-video-card-title {
+    color: var(--wpcg-color-accent);
+}
+
+.wpcg-video-meta {
+    font-size: 0.82rem;
+    color: var(--wpcg-color-muted);
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 900px) {
+    .wpcg-news-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .wpcg-news-card-featured,
+    .wpcg-news-card-regular {
+        grid-column: span 2;
+    }
+
+    .wpcg-video-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .wpcg-news-card-featured .wpcg-news-card-link {
+        flex-direction: column;
+    }
+
+    .wpcg-news-thumb {
+        flex-basis: auto;
+    }
+
+    .wpcg-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

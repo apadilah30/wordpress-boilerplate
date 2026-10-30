@@ -5,6 +5,7 @@ web/app/plugins/
 web/app/mu-plugins/*
 !web/app/mu-plugins/security.php
 !web/app/mu-plugins/register-theme-dirs.php
+!web/app/mu-plugins/custom-taxonomies.php
 web/app/uploads/
 web/app/upgrade/
 web/app/cache/
@@ -21,6 +22,9 @@ vendor/
 # --- Docker & backups ---
 backups/
 docker/data/
+*.sql
+*.sql.gz
+*.sql.bz2
 
 # --- Editor & OS ---
 .idea/
@@ -44,3 +48,6 @@ daily/*
 
 # --- Node (kalau nanti pakai untuk asset build) ---
 node_modules/
+
+# --- Zip files ---
+*.zip
