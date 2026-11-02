@@ -147,13 +147,17 @@ docker compose exec db mysqladmin ping -h localhost -u root -p"${DB_ROOT_PASSWOR
 │   ├── wp/                     WP core (managed by composer — gitignored)
 │   ├── index.php, wp-config.php
 ├── plugins-custom/             Plugin custom (non-WPackagist), di-commit
-│   └── wp-boilerplate-announcement/   Reference plugin
+│   ├── wp-taxonomy-grid/       Widget Elementor: Content Navigator (sections, grid, detail)
+│   ├── wp-content-grid/        Widget Elementor: grid berita / video
+│   ├── wp-social-showcase/     Widget Elementor: tab social media (galeri manual atau shortcode plugin feed)
+│   └── wp-timeline/            Widget Elementor: timeline zig-zag
 ├── scripts/                    Helper scripts
 │   ├── lib/common.sh           Shared bash functions (DRY)
 │   ├── deploy.sh               Deploy handler (dijalankan di server)
 │   ├── rollback.sh             Rollback ke tag sebelumnya
 │   ├── migrate.sh              Export/import site
 │   ├── restore-backup.sh       Restore DB dari backup file
+│   ├── backup-ftp.sh           Backup app + DB jadi zip + sql siap upload ke hosting FTP (tanpa Docker)
 │   ├── add-custom-plugin.sh    Helper add plugin custom
 │   └── smoke-test.sh           Boot image + curl healthz (CI)
 ├── daily/                      Rekap progress harian (GITIGNORED, kecuali TEMPLATE)
@@ -257,13 +261,14 @@ Setelah aktif, menu **Members** muncul di admin sidebar. Ada 4 sub-menu utama:
 |--------|------|-------|
 | **Contact Form 7** | `contact-form-7` | Form builder simple |
 
-### Reference plugin (custom, di-commit ke repo)
+### Plugin custom (di-commit ke repo)
 
 | Plugin | Path | Peran |
 |--------|------|-------|
-| **WP Boilerplate Announcement** | `plugins-custom/wp-boilerplate-announcement/` | Template siap-copy: contoh CPT + meta box + dynamic shortcode + i18n |
-
-Detail plugin ini di section [Reference plugin](#reference-plugin).
+| **Taxonomy Grid** | `plugins-custom/wp-taxonomy-grid/` | Widget Elementor: sidebar kategori + konten (mode Single / Sections) |
+| **Content Grid** | `plugins-custom/wp-content-grid/` | Widget Elementor: grid berita / video |
+| **Social Showcase** | `plugins-custom/wp-social-showcase/` | Widget Elementor: tab social media (galeri manual atau shortcode plugin feed) |
+| **Timeline** | `plugins-custom/wp-timeline/` | Widget Elementor: timeline zig-zag |
 
 ---
 
@@ -320,51 +325,6 @@ git push  # auto-deploy via CI
 - Di prod `DISALLOW_FILE_MODS=true` (upload diblok — attack vector major)
 - Kalaupun bisa, upload manual bakal hilang saat next deploy (image rebuild)
 - Composer path repo = reproducible, version-controlled, rollback-able
-
-### Reference plugin
-
-Boilerplate include reference plugin `wp-boilerplate-announcement` (folder `plugins-custom/wp-boilerplate-announcement/`) — auto-aktif via `dev-init.sh`. Dibuat sebagai **template siap-copy** yang mendemonstrasikan pattern lengkap plugin custom.
-
-**Yang dicontohkan:**
-
-- Custom Post Type registration (`wpba_announcement`) tanpa CPT UI plugin
-- Meta box native dengan nonce validation, sanitize/escape ala WP standard
-- `register_post_meta()` untuk expose meta ke REST API + Gutenberg
-- Dynamic shortcode dengan attribute-driven output
-- i18n lengkap: `load_plugin_textdomain`, `.pot` template di `languages/`, escaping i18n functions
-- Backward compat fallback (legacy option-based banner)
-- Uninstall handler yang bersih (option + CPT posts)
-
-**Shortcode `[wpba_announcement]`:**
-
-```
-[wpba_announcement]                       → 1 pengumuman terbaru
-[wpba_announcement latest="3"]            → 3 pengumuman terbaru
-[wpba_announcement id="42"]               → pengumuman ID 42 spesifik
-[wpba_announcement id="42" class="promo"] → dengan CSS class extra
-```
-
-**Cara pakai:**
-
-1. WP admin → **Announcements** → Add New (isi title, konten, background color, optional CTA link).
-2. Publish.
-3. Taruh shortcode di theme (`do_shortcode()`) atau drag Elementor's "Shortcode" widget dan paste `[wpba_announcement]`.
-
-**Struktur file:**
-
-```
-plugins-custom/wp-boilerplate-announcement/
-├── wp-boilerplate-announcement.php   Plugin bootstrap
-├── includes/
-│   ├── cpt.php                       CPT + meta box registration
-│   ├── shortcode.php                 [wpba_announcement] renderer
-│   └── settings.php                  Legacy fallback + settings page
-├── languages/
-│   └── wp-boilerplate-announcement.pot    i18n template
-├── composer.json
-├── readme.txt
-└── uninstall.php
-```
 
 ---
 
@@ -551,6 +511,22 @@ docker compose --env-file .env.production \
     --from-url=https://old-domain.com \
     --to-url=https://new-domain.com
 ```
+
+---
+
+## Deploy ke hosting FTP (tanpa Docker)
+
+Untuk server tanpa VPS (hanya FTP + PHP/MySQL). WP core, `vendor/`, plugin, dan uploads hanya ada di volume Docker, jadi `scripts/backup-ftp.sh` mengambilnya dari container dan menghasilkan **2 file**:
+
+```bash
+# Jalankan dari WSL / Linux. Container app dan db harus sedang jalan.
+bash scripts/backup-ftp.sh https://domain-produksi.com
+# Hasil: backups/imigrasi-wp.zip + backups/backup_YYYY-MM-DD.sql
+```
+
+URL produksi boleh dikosongkan. Kalau diisi, URL lokal di SQL (mis. `http://localhost:6300`) diganti otomatis dan `WP_HOME` di `.env` dalam zip terisi.
+
+Langkah upload ada di `DEPLOY-FTP.txt` di dalam zip: buat database di hosting, import SQL, extract zip, lalu edit `.env` (nama DB, user, password).
 
 ---
 

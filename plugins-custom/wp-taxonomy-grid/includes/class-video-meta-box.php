@@ -1,8 +1,8 @@
 <?php
 /**
  * Admin-only concern: the "External Video URL" meta box for the `videos`
- * post type (Content Navigator / Galeri Video, section_click_behavior =
- * redirect_or_popup_player).
+ * post type (Content Navigator / Galeri Video). The value is read by the
+ * Media Popup (see includes/media-popup.php), which plays it in a popup.
  *
  * Plain functions, no class, despite the `class-` filename prefix matching
  * this plugin's include-naming convention — there is no instance state to
@@ -49,7 +49,7 @@ function wptg_render_video_meta_box(\WP_Post $post): void
     <input type="url" id="wptg_video_external_url" name="wptg_video_external_url"
            value="<?php echo esc_attr($value); ?>" class="widefat"
            placeholder="https://youtube.com/watch?v=...">
-    <p class="description"><?php esc_html_e('Leave empty for self-hosted videos (attach the video file to this post instead). If filled, clicking this video in the "Galeri Video" section redirects here in a new tab.', 'wp-taxonomy-grid'); ?></p>
+    <p class="description"><?php esc_html_e('Optional. A YouTube or Vimeo link, or a direct video file link (.mp4, .webm), plays inside the popup. Any other link (TikTok, Instagram...) only shows an "Open video" button in the popup. If empty, the popup uses the first video found in the post content, then a video file attached to this post.', 'wp-taxonomy-grid'); ?></p>
     <?php
 }
 

@@ -1,9 +1,9 @@
 === Taxonomy Grid ===
 Contributors: apadilah
 Tags: cpt, taxonomy, elementor, widget, ajax, dynamic
-Requires at least: 6.0
+Requires at least: 6.2
 Tested up to: 6.5
-Stable tag: 4.0.0
+Stable tag: 4.6.0
 Requires PHP: 8.0
 Requires Plugins: elementor
 License: GPLv2 or later
@@ -120,9 +120,13 @@ Single restores them).
   Thumbnails`, `Vertical List of Thumbnails`, or `Single Post Full Detail`
   (the last three are Taxonomy Accordion only).
 * **Item Click Behavior** — `Swap Content Panel (inline detail)`, `Open
-  Floating Modal`, or `Video: Redirect to URL, or Popup Player` (the last
-  one is only meaningful for a video-style section).
-* **Enable Search** — shows a search box scoped to this section only.
+  Floating Modal`, or `Media Popup (video / photo)` (see "Media Popup"
+  below). The old value `Video: Redirect to URL, or Popup Player` is still
+  accepted for widgets saved before 4.3.0, shown as `Old: Video redirect /
+  popup (now same as Media Popup)`, and behaves exactly like Media Popup: a
+  click never redirects or opens a new tab anymore.
+* **Include in Search** — the widget has ONE search box (see "Search"
+  below). Turn this off to make that box ignore this section.
 * **Items Per Page** — initial load size and "Lihat Lebih Banyak" AJAX
   page size (hidden for `Single Post Full Detail`, which shows one post
   at a time, not a paginated list).
@@ -136,35 +140,148 @@ editor.
 
 **The 4 reference section configurations:**
 
-| Sidebar label | Section Type | Post Type | Taxonomy | Content Style | Click Behavior | Search |
+| Sidebar label | Section Type | Post Type | Taxonomy | Content Style | Click Behavior | Include in Search |
 |---|---|---|---|---|---|---|
 | Berita Terbaru | Flat List | news | — | Numbered Feed | Swap Content Panel | Yes |
 | Pengumuman | Flat List | announcements | — | Numbered Feed | Open Floating Modal | Yes |
-| Galeri Foto | Taxonomy Accordion | gallery | gallery_category | Grid of Thumbnails | Open Floating Modal | No |
-| Galeri Video | Taxonomy Accordion | videos | videos_category | Vertical List of Thumbnails | Video: Redirect/Popup | No |
+| Galeri Foto | Taxonomy Accordion | gallery | gallery_category | Grid of Thumbnails | Media Popup (video / photo) | No |
+| Galeri Video | Taxonomy Accordion | videos | videos_category | Vertical List of Thumbnails | Media Popup (video / photo) | No |
 
-**Search on Berita Terbaru / Pengumuman (Flat List sections):** typing in
-the box triggers a fresh AJAX query (debounced 300ms), not a filter over
-already-loaded items — because these lists are paginated, a DOM-only
-filter could only ever search items already paged in, which would wrongly
-show "no results" for an older item still on page 2+. A Taxonomy
-Accordion section's own search box (Galeri Foto/Video, if enabled) stays
-a DOM filter, same as the legacy sidebar search, since its whole term/post
-tree is always rendered up front, never paginated.
+**Search:** there is ONE search per widget (toggle, placeholder, icon and
+**Search Position** under **Content > Sections**; styled by **Style > Search
+Box**). The box can sit in the sidebar, above the list, or both (two inputs
+that stay in sync). It searches inside whichever section is open, and keeps
+applying when you switch to another section:
 
-**Galeri Video — external URL vs. self-hosted:** edit a `videos` post and
-use the **"External Video URL"** box in the editor sidebar. If filled,
-clicking that video in the Galeri Video section opens the URL in a new
-tab. If left empty, attach a video file to the post instead (self-hosted)
-— clicking then opens the shared modal with an HTML5 player. If neither
-is set, clicking falls back to opening the modal with the normal
-post-detail view instead of doing nothing. The URL is stored in post meta
-key `_video_external_url`.
+* Sections shown as a feed, grid or list (Berita Terbaru, Pengumuman, Galeri
+  Foto, Galeri Video): typing triggers a fresh AJAX query (debounced
+  300ms) from page 1, not a filter over already-loaded items. These lists
+  are paginated, so a DOM-only filter would wrongly show "no results" for
+  an older item still on page 2+.
+* `Single Post Full Detail` sections: the sidebar tree is filtered in the
+  browser, same as the legacy sidebar search (its whole term/post tree is
+  always rendered up front).
+* A section with **Include in Search** turned off is left untouched.
 
-**The reusable modal:** used by Pengumuman, Galeri Foto, and Galeri
-Video's self-hosted/fallback cases. Styled from **Style > Modal /
-Lightbox**. Closes on Escape or a click on the dark backdrop (not the
-panel).
+**The reusable modal:** used by Pengumuman (Open Floating Modal) and by the
+Media Popup. Styled from **Style > Modal / Lightbox**. Closes on Escape,
+the close button or a click on the dark backdrop (not the panel). Focus
+goes to the close button when it opens and back to the clicked item when
+it closes.
+
+== Media Popup (video / photo) ==
+
+Since 4.3.0 one popup serves every video and photo. A clicked item shows a
+dim backdrop and a centered panel: the media on top, then the title and the
+date ("02 Oktober 2026"), and a round gold close button on the panel's
+top-right corner.
+
+**Where it is used**
+
+* Taxonomy Grid, Sections repeater: **Item Click Behavior = Media Popup
+  (video / photo)**. The item then only carries `data-wptg-media="<post id>"`
+  (plus its usual `data-post-id`, `data-post-type`, `data-click-behavior`).
+  It works for items that arrive by AJAX too (load more, search, other term).
+* Content Grid plugin 1.2.0+: **Link Mode = Media Popup (video / photo)**. The
+  card stays a normal `<a href="permalink">` and gets the same
+  `data-wptg-media` attribute.
+* Any other markup: add `data-wptg-media="<post id>"` to an element. One
+  listener on `document` (assets/js/media-popup.js) handles it.
+
+**What the popup shows** is decided from the post's data, not from its
+post type (`wptg_build_media_modal_payload()`):
+
+1. **Video**, when the post has a video source. The first one found wins:
+   1. post meta `_video_external_url` (the "External Video URL" box of the
+      `videos` post type),
+   2. the first video in the post content: a `<video>` tag or Video block, a
+      YouTube / Vimeo link or Embed block, a `[video]` shortcode, or a
+      YouTube / Vimeo `<iframe>`. Iframes of any other host are ignored.
+   3. a video file attached to the post (uploaded from the post's edit screen).
+2. **Photo**, when there is no video: the featured image (size `large`),
+   else the first image in the content.
+3. **Post**, when there is neither: the title + content popup of "Open
+   Floating Modal".
+
+**How a video is played**
+
+* YouTube (`watch?v=`, `youtu.be/`, `shorts/`, `embed/`) opens in a
+  `youtube-nocookie.com` iframe, Vimeo (`vimeo.com/<id>`,
+  `player.vimeo.com/video/<id>`) in a `player.vimeo.com` iframe. Both autoplay.
+* A direct file (`.mp4 .webm .ogv .m4v .mov`) or an attached video plays in
+  a `<video controls>` that is started by the script.
+* Any other external URL (TikTok, Instagram...) cannot be embedded: the popup
+  shows a short message and an "Buka video" button (new tab). Nothing redirects
+  automatically.
+* The featured image is never shown in a video popup (no poster either).
+* Closing the popup removes the player, so sound stops.
+
+The ids are read from the URL text. WordPress oEmbed is not used, so no
+outgoing request is made. The content is scanned as raw `post_content`: a post
+built only with Elementor keeps its content elsewhere, so use External Video
+URL for such posts.
+
+**Security:** the AJAX action `wptg_get_media_modal` checks the `wptg_nonce`
+nonce, serves only published posts of public post types, and refuses posts
+that need a password. The player/image markup passes through `wp_kses()` with
+a strict allowlist.
+
+**Style:** the defaults match the design and live in CSS variables on
+`.wptg-media-modal` (`--wptg-modal-panel-width`, `--wptg-modal-panel-bg`,
+`--wptg-modal-radius`, `--wptg-modal-close-bg`, `--wptg-modal-close-color`,
+`--wptg-modal-title-color`, ...), so the popup also looks right on pages
+without a Taxonomy Grid widget. **Style > Modal / Lightbox > Media Popup**
+(Sections mode) changes width, radius, background, close button colors, and
+title/date typography and color. Those controls apply site-wide on the page
+(the popup lives in `<body>`, outside the widget).
+
+== Deep Link (Sections mode) ==
+
+Since 4.2.0 a Sections page can be opened with a section and a category
+already selected, by adding two query params to the page URL:
+
+`/berita/?wptg_section=videos&wptg_term=profil-kantor-imigrasi`
+
+* `wptg_section` — the **post type slug** of a Sections repeater row
+  (e.g. `gallery`, `videos`, `news`).
+* `wptg_term` — the **slug** (not the ID) of a term of that row's taxonomy.
+  Optional.
+
+The Content Grid plugin (1.1.0+) builds these links when its "Link Mode" is
+"Content Navigator page (deep link)". The two plugins share nothing but
+these two param names.
+
+What happens:
+
+* The server renders the result (no flicker, works without JavaScript): the
+  matching section is open, the matching term is marked active, and the
+  content panel already lists that term's items, same as after a manual
+  click. The header title, breadcrumb and content title show the SECTION
+  label, exactly as they do after a manual click on a term.
+* The first repeater row whose Post Type matches is used. If a term is
+  given, the first matching row that really contains that term wins (so a
+  page can have a Flat List "Berita Terbaru" AND an accordion for the same
+  post type).
+* A Flat List section has no categories: `wptg_term` is ignored and only
+  the section opens.
+* The term must have at least one published post of that post type
+  (that is how the sidebar lists terms). A section that matches but a term
+  that is unknown or empty: the section opens on its first term.
+* Anything invalid (unknown section, no such row, empty section, wrong
+  type of value) is ignored silently and the normal default section opens.
+  The page never errors.
+* Values are sanitized with `sanitize_key()` (section) and
+  `sanitize_title()` (term). The params are read-only and change no data,
+  so no nonce is used.
+* After a deep link, search, "Lihat Lebih Banyak" and switching sections
+  behave as usual.
+* The page scrolls to the widget once after load (JS, only when the deep
+  link was valid).
+* It does not open one specific post inside the term.
+
+Caching: a page-cache plugin such as WP Super Cache stores one copy per
+query string, so each deep link URL gets its own cached page. No extra
+code or settings needed.
 
 == Detail Mode Defaults ==
 
@@ -173,11 +290,145 @@ If left empty:
 - **Title** defaults to the title of the page the widget is placed on.
 - **Breadcrumb** becomes "Beranda > {Subtitle} > {Title}".
 
+== Empty State (Skeleton) ==
+
+Since 4.4.0 the widget never disappears or prints an "empty" / error text
+when there is no data. It always draws its full layout (header, breadcrumb,
+search box, sidebar, content panel, following the switches you set) and the
+parts that would hold data show grey skeleton blocks shaped like the real
+cards. This applies to all layouts: Sections, Single + Detail, Single + Grid.
+
+**What you see**
+
+* Sections: no valid section at all = sidebar with 4 skeleton lines and a
+  feed-shaped skeleton in the panel. A section with a label but no data stays
+  in the sidebar (a Flat List is still a button; an Accordion keeps its header
+  and arrow and shows skeleton lines instead of terms). If no section has
+  data, the first valid section is the open one, so the header, breadcrumb
+  and content title show its label.
+* The panel skeleton follows the section's Content Style: Numbered Feed =
+  one big card + compact cards, Grid of Thumbnails = image + 2 lines, Vertical
+  List = small thumbnail + lines, Single Post Full Detail = title + text block.
+* Search without results, a term with no items, or clicking a section without
+  data swaps the panel for the same skeleton. There is no Load More button in
+  an empty state.
+* Single mode: a missing / wrong Post Type or Taxonomy, or no published posts,
+  gives the two-column frame with a skeleton sidebar and a skeleton detail
+  (or grid) panel.
+* Deep link (`?wptg_section=...`) to a section that exists but has no data
+  opens it in this empty state. A bad value still falls back to the default.
+
+**Accessibility:** every skeleton shape is `aria-hidden`. The content skeleton
+has one visually hidden text, "Belum ada konten", inside a `role="status"`
+wrapper. Nothing else is printed.
+
+**Editor note:** users who can edit posts (and the Elementor editor) also see
+one small dashed line under the widget, e.g. "Taxonomy Grid (hanya terlihat
+oleh editor): pilih Taxonomy di tab Content > Source." Visitors never see it.
+
+**Look:** Style > Empty State (Skeleton): Skeleton Color, Shine Color, Border
+Radius. The shine animation is switched off for visitors with
+`prefers-reduced-motion: reduce`. Sizes, gaps and card radius come from the
+existing layout controls (Feed Cards, Grid, ...).
+
+**Left as text on purpose:** a request / network error while loading
+("Error loading ..."), and the hint "Pilih salah satu item di samping..." in
+Single mode when data exists but "Auto-select First Item" is off.
+
+== Document Files (PDF / Word / image preview) ==
+
+Since 4.5.0 a post can hold MANY files that visitors preview in a popup. Built
+for the "Informasi" page (Standar Pelayanan, Maklumat Pelayanan), but it works
+for any post type you add to the `wptg_document_post_types` filter.
+
+**Document Files meta box** (class-document-meta-box.php)
+
+* Shown on the edit screen of the post types returned by
+  `apply_filters('wptg_document_post_types', ['service-standards', 'service-pledges'])`.
+  Those two post types are created in CPT UI (slugs exactly `service-standards`
+  and `service-pledges`), not by this plugin.
+* "Tambah file" opens the WordPress media modal (several files at once; only
+  PDF, .doc/.docx, JPG, PNG, WebP). Drag the rows to reorder. "Label" is
+  optional: empty = the attachment title is shown.
+* Saved as post meta `_wptg_document_files` = list of `['id' => attachment id,
+  'label' => text]`. Nonce + `edit_post` capability are checked, autosaves and
+  revisions are skipped, every id must be an existing attachment whose mime type
+  is on the allowlist, at most 50 files.
+* `wptg_get_document_files($post_id)` is the only function that reads the meta.
+  It returns `id, label, url, mime, kind (pdf|image|office|other), ext, size,
+  title` and skips deleted or not-allowed files.
+* The script and style of the box load only on those edit screens.
+
+**Content Style: Document List** (Sections repeater; works for Flat List and
+Taxonomy Accordion). One card per post, two rows (layout since 4.6.0):
+
+* Row 1: a big line icon on the left (document + pencil, or your own "Card
+  Icon") and, to its right, the title in gold and "Diunggah pada: 1 Oktober
+  2026" (publish date, `j F Y`) in navy. Optional "3 file" under the date.
+* Row 2: the cover image BELOW row 1, full width, fixed height, top of the
+  document visible. The "Lihat" and "Unduh" pills sit on its top-right corner.
+  Cover source, first match wins: Featured Image, first image file in Document
+  Files, WordPress's generated preview of the first PDF (only when the server
+  can make it), else no cover; then the pills become their own row under row 1,
+  on the right. A post without valid files shows no pills.
+* "Lihat" is a real `<button>` and opens the popup (the way in for keyboard
+  users). A mouse click anywhere on the card opens the same popup. The card
+  itself has no `role` / `tabindex`, so buttons are not nested in a button.
+* "Unduh": one file = a plain `<a download>` to that file, no popup; several
+  files = opens the popup with the download buttons visible (flag
+  `data-wptg-show-download="1"`, only for Media Popup / Document Preview).
+
+Texts and switches: Content > Document Card (Show Icon, Card Icon, Show Date,
+Date Label, Show Cover, Show File Count, View Button Text, Show View Icon, Show
+Download Button (card), Download Button Text, Show Download Icon, Show Download
+Button (popup)). Look: Style > Document Card (card, icon, title, date, file
+count, cover, buttons). Every size/gap/color default is a CSS variable with a
+fallback in `assets/css/taxonomy-grid.css` (`--wptg-doc-*`), so the design looks
+the same with no Elementor setting at all. Pagination, Load More, search and the
+empty-state skeleton work like the other content styles.
+
+**Item Click Behavior: Document Preview (PDF / Word / image)** opens the same
+popup as Media Popup (same `data-wptg-media` attribute, same listener). The
+answer kind order is video > document > photo > post, decided from the data: a
+post with validated files becomes a "document" popup. The server sends only
+the file list (`files`: label, url, kind, mime, ext, download_url,
+office_preview, embed_url); the browser draws the preview
+(`assets/js/document-viewer.js`).
+
+* Several files: a row of file chips switches between them.
+* Image: shown as is.
+* PDF: PDF.js (bundled in `assets/vendor/pdfjs/`, Apache-2.0, see VERSION.txt
+  there). It is loaded only when the first PDF is opened. Every page is a
+  canvas that is drawn when it comes near the visible area; only 8 canvases stay
+  in memory. Password-protected or broken PDFs show a polite message and an
+  "Buka file" link. No text layer (no text selection or in-document search).
+* Word (.doc / .docx): Microsoft's online viewer in an iframe, only when the file
+  URL is publicly reachable. The server decides (`wptg_is_public_url()`:
+  localhost, *.local, *.test, *.localhost, private IPs and dev ports are not
+  public) and the filter `wptg_office_preview_enabled` ($enabled, $file_url) can
+  override it. Otherwise a message and an "Buka file" link.
+* The popup closes with Esc, the backdrop or the round button, and focus goes
+  back to the card. Closing stops PDF rendering and frees the document.
+* Style > Document Popup: panel width, viewer height, viewer background, chip
+  colors (normal / active), PDF page background, space between pages.
+
+**Server requirements**
+
+* `.mjs` files must be served as JavaScript (`Content-Type: text/javascript`).
+  Check: `curl -I https://your-site/app/plugins/wp-taxonomy-grid/assets/vendor/pdfjs/pdf.min.mjs`.
+* If a Content-Security-Policy is added: `frame-src` must allow
+  https://view.officeapps.live.com (and the YouTube / Vimeo hosts), `worker-src`
+  must allow 'self' blob:, `script-src` 'self', `img-src` data: blob:.
+* With Polylang, enable the two post types in Languages > Settings.
+
 == Responsive Behavior ==
 
 - Desktop: sidebar + content side by side (sidebar width adjustable in Style tab).
 - Mobile (≤768px): sidebar stacks above content, full width; header
   decorative lines hidden; font sizes scale down.
+- Sections mode: the sidebar also stacks above the content on tablet
+  (≤1024px) and the featured feed card becomes vertical; on mobile the
+  numbers shrink and compact cards keep a small thumbnail on the left.
 
 == Notes on Shared Taxonomies ==
 
@@ -193,6 +444,211 @@ categories won't appear, and clicking won't show empty results.
 * Taxonomy must be registered for the CPT
 
 == Changelog ==
+
+= 4.6.0 =
+* Document card redesigned: head row (changeable icon, gold title, "Diunggah pada:
+  <date>") and the cover BELOW it with "Lihat" / "Unduh" pills on its top-right
+  corner. New Content section "Document Card" (renamed from "Document List"):
+  Show Icon, Card Icon, Show Date, Date Label, Show Cover, Show File Count (now
+  off by default), View Button Text, Show View Icon, Show Download Button
+  (card), Download Button Text, Show Download Icon, Show Download Button (popup).
+* Cover sources: Featured Image, first image file, generated preview of the
+  first PDF (checked so a missing preview never shows a broken image).
+* "Unduh": one file downloads directly, several files open the popup with the
+  download buttons shown. New per-click flag `data-wptg-show-download="1"`
+  (replaces the card attribute `data-wptg-download`).
+* The card is no longer `role="button"` / `tabindex="0"` (it holds real
+  buttons). `media-popup.js` skips clicks that come from an `a[download]`.
+* Style > Document Card rebuilt around CSS variables (`--wptg-doc-*`) with the
+  design values as fallbacks; new Date, Cover (height, space, radius, shadow,
+  fit, position) and Buttons (overlay offset, gap, typography, padding, radius,
+  size, View / Download colors Normal and Hover) controls. Removed: Cover Width,
+  Space Between Cover/Icon/Text/Button, the single-pill Button colors.
+* The AJAX request now sends ONE field `doc_options` (JSON from the wrapper's
+  `data-doc-options`), validated by `wptg_normalize_document_options()`. The
+  Card Icon is copied from a `<template>` like the read-more icon
+  (`fillIconSlots()` in taxonomy-grid.js).
+* Skeleton variant `document` mirrors the new layout.
+* New PHP helpers: `wptg_render_document_svg()`, `wptg_get_document_cover_html()`,
+  `wptg_get_pdf_preview_image()`, `wptg_render_document_actions()`.
+  `wptg_build_item_attrs()` got an optional `$popup_hint` argument.
+
+= 4.5.0 =
+* New "Document Files" meta box (`includes/class-document-meta-box.php`) for the
+  post types in the `wptg_document_post_types` filter (default
+  `service-standards`, `service-pledges`): pick many PDF / Word / image files,
+  drag to reorder, optional label per file. Meta `_wptg_document_files`; the
+  single reader is `wptg_get_document_files()`.
+* New Content Style **Document List** (Flat List and Taxonomy Accordion) with
+  its own skeleton (`wptg_render_skeleton('document')`) and Load More / search
+  support. New Content section "Document List" (Show Cover, Show File Count,
+  Button Text, Show Download Button) and Style sections "Document Card" and
+  "Document Popup".
+* New Item Click Behavior **Document Preview (PDF / Word / image)**. It reuses
+  `data-wptg-media` and the existing click listener. The popup payload has a new
+  kind `document` (order: video > document > photo > post) with a `files` list.
+* New `assets/js/document-viewer.js` draws the files: image, PDF through the
+  bundled PDF.js 6.4.299 (legacy build, lazy loaded, lazy page rendering,
+  cleanup on close), Word through Microsoft's viewer on public sites (server
+  flag `office_preview`, filter `wptg_office_preview_enabled`).
+* `modal.js`: new `document` popup variant and `WptgModal.onClose()`.
+* `.gitignore` of the project now keeps `assets/vendor/` of custom plugins.
+* Needs `.mjs` served as JavaScript and, with a CSP, the directives listed in
+  "Document Files" above.
+
+= 4.4.0 =
+* New Empty State: with no data the widget still renders its whole layout and
+  shows grey skeleton blocks instead of text. Covers Sections, Single + Detail
+  and Single + Grid. See "Empty State (Skeleton)" above.
+* New PHP helpers `wptg_render_skeleton()` (variants feed, grid, list, detail,
+  sidebar_terms), `wptg_render_skeleton_for_style()`, `wptg_render_editor_note()`
+  and `wptg_resolve_empty_active()`. New CSS classes `.wptg-skeleton*`,
+  `.wptg-sr-only`, `.wptg-editor-note`.
+* Removed the public texts "No valid sections configured.", "No items found.",
+  "No items in this category.", "Belum ada konten." (now only visually hidden),
+  "Tidak ditemukan." and the `Error: ...` lines of Single mode. Editors see one
+  small note with the reason instead. The unused `.wptg-error` CSS is gone.
+* Sections: a section without data stays in the sidebar. A deep link to such a
+  section opens its empty state. An accordion section with no term picked no
+  longer lists every post of the post type.
+* AJAX `wptg_query_items` answers an empty first page with the skeleton in
+  `html` plus `empty: true`; an empty later page returns no html and
+  `has_more: false`. It also accepts `content_style=single_detail` for the
+  empty state only.
+* JS: an accordion header without terms opens that section's empty panel.
+  `.wptg-sections-content` has a new `data-active-section` attribute.
+* New Style section "Empty State (Skeleton)": Skeleton Color, Shine Color,
+  Border Radius.
+
+= 4.3.0 =
+* New Media Popup (video / photo): one popup for every video and photo.
+  Sections repeater > Item Click Behavior has a new option **Media Popup
+  (video / photo)**. Items only output `data-wptg-media="<post id>"` and
+  `assets/js/media-popup.js` (one listener on `document`) opens the popup.
+  See "Media Popup" above.
+* The popup kind comes from the post data: video (External Video URL meta,
+  then the first video/embed in the content, then an attached video file),
+  else photo (featured image, else first content image), else the old post
+  view. YouTube and Vimeo ids are parsed from the URL text, no oEmbed call.
+* Video popups never show the featured image (no poster) and start playing at
+  once. Closing the popup removes the player, so sound stops.
+* Behavior change: the old `redirect_or_popup_player` value (open the URL in a
+  new tab, or a small video popup) is still accepted but now behaves exactly
+  like Media Popup. Nothing redirects anymore. Its label in the editor is now
+  "Old: Video redirect / popup (now same as Media Popup)".
+* The External Video URL box description is updated. A URL that is not
+  YouTube / Vimeo / a video file (TikTok, Instagram...) shows an "Buka video"
+  button in the popup.
+* New AJAX action `wptg_get_media_modal` (read-only, nonce, published posts of
+  public post types only, password-protected posts refused).
+* New PHP file `includes/media-popup.php`: `wptg_build_media_modal_payload()`
+  and helpers. New JS file `assets/js/media-popup.js`. `modal.js` now also
+  handles the types `media`, `loading` and `message`, gives focus to the close
+  button and back to the clicked item, and no longer has a `video` type.
+* `wptg-media-popup` (script) and `wptg-styles` are registered and loaded on
+  every page, so the Content Grid plugin can use the popup on pages without a
+  Taxonomy Grid widget. The script data comes as `wptg_media` (ajax_url, nonce,
+  translatable texts).
+* New CSS block "MEDIA POPUP" with CSS variables. New Style controls under
+  Modal / Lightbox > Media Popup: Popup Width, Border Radius, Background, Close
+  Button Background / Icon Color, Title and Date typography + color.
+* Requires WordPress 6.2+ (uses `WP_HTML_Tag_Processor`).
+
+= 4.2.0 =
+* Deep link for Sections mode: `?wptg_section=<post_type>&wptg_term=<term_slug>`
+  opens that section with that category already active (server-side render,
+  no flicker, no JS needed). Invalid values are ignored and the normal default
+  section opens. Flat List sections ignore the term. See "Deep Link" above.
+* New PHP helpers: `wptg_read_deep_link_param()`, `wptg_find_section_term_by_slug()`,
+  `wptg_build_deep_link_active()`, `wptg_resolve_deep_link()`.
+* The Sections wrapper has `data-deep-link="1"` when a valid deep link was
+  applied; the JS scrolls to the widget once after load.
+* No new Elementor controls. Without the params everything works as in 4.1.0.
+
+= 4.1.0 =
+Sections mode, for the "Berita" page design:
+* Content title: an h2 above the list (Content > Sections > Show Content Title,
+  default on). Empty "Content Title" follows the open section's label and is
+  updated by JS on every switch; type a text to keep it fixed. Style > Content
+  Title (Sections): typography, color, margin, alignment.
+* Search Position (Content > Sections): Sidebar / Content / Both (default
+  Both). With Both there are two inputs that stay in sync and run ONE search.
+  The content search is full width above the list. Both use the .wptg-search*
+  classes, so Style > Search Box styles both.
+* Numbered feed redesign: cream cards, big gold number (01, 02, ...), date,
+  title, excerpt, and a "read more" with text + icon. New Content > Feed &
+  Load More: Feed Layout (Featured first + compact rest / All featured / All
+  compact), Show Number, Excerpt Length (words), Read More Text, Read More
+  Icon, Load More Text. The number continues across Load More (07 on page 2)
+  and restarts at 01 after a search or a section switch. The first result of a
+  search is also the "featured" card now.
+* New Style > Feed Cards (Featured / Compact): gap between cards, card radius,
+  background and shadow (Normal/Hover), featured/compact image width and
+  height, image radius and object-fit, number typography (featured and compact
+  separately), number spacing, text gap, excerpt typography and max lines,
+  read-more icon color/size/spacing.
+* Load More: text is editable, extra Style controls (radius, alignment, hover
+  colors), a loading state (button disabled + spinner, no double requests).
+  The old fixed "Lihat Lebih Banyak" strings are gone from PHP and JS.
+* New Style > Accordion Terms (Sections): typography, text/background color
+  (Normal/Hover/Active), padding, margin, radius, indent and gap of the term
+  buttons inside an accordion section, plus the accordion arrow
+  (color/size/spacing) and the space between sidebar entries.
+* Style > Sections Nav: Hover and Active tabs now have their own Text Color.
+* Header: new "Show Decorative Lines" switch (Content > Header) and "Gap
+  Between Lines & Title" (Style > Header). The lines now flank only the title,
+  with the subtitle above it (all layouts).
+* Responsive: at <=1024px the Sections sidebar goes above the content and the
+  featured card becomes vertical; at <=767px numbers shrink and the compact
+  card keeps its small thumbnail on the left. Sidebar Width now accepts down to
+  100px and up to 100%.
+* Fixed: on mobile, Style > Container > Sidebar Width could make the stacked
+  sidebar 280px tall (an Elementor selector beat the stylesheet's media
+  query). The stylesheet now forces full width there. The stacked content
+  column also stretches to full width now.
+* Heads-up for existing Sections widgets: the feed cards look different
+  (cream cards, number beside the text instead of a badge on the image, compact
+  rest), a content title and a second search box appear by default. Switch them
+  off in Content if not wanted. Regenerate Elementor CSS (Elementor > Tools)
+  after updating.
+* AJAX still uses the `wptg_nonce` nonce. Feed options sent by the browser are
+  whitelisted server-side; the read-more icon markup is never sent by the
+  browser (JS copies it from a <template> rendered by the server).
+
+= 4.0.2 =
+* Header banner and breadcrumb now render in EVERY layout: Single (Detail),
+  Single (Grid) and Sections. Previously only Single + Detail had them.
+  Content > Header / Breadcrumb and Style > Header / Breadcrumb now show in
+  all modes (the Show Header / Show Breadcrumb switches stay, default on).
+  Heads-up: an existing Single + Grid widget now gains a header and
+  breadcrumb; switch them off in Content if that page should not have them.
+* Sections mode: an empty header Title / breadcrumb Current Label FOLLOWS the
+  open section (e.g. "Berita Terbaru" -> "Pengumuman"), updated on every
+  switch without reloading. Type a Title / Current Label to keep it fixed.
+  Subtitle defaults to the title of the page the widget sits on.
+* Header and breadcrumb markup is now one shared implementation used by all
+  three layouts (Single detail output is unchanged).
+* Grid mode: the sidebar + posts row now sits in an inner `.wptg-body`
+  (same as detail mode) so it shares its spacing/responsive rules.
+* Fixed: Sections mode picked the initial section by list position instead
+  of its repeater index, which could show the wrong section's content if an
+  earlier repeater row was invalid and skipped.
+
+= 4.0.1 =
+* Sections mode: ONE search box at the top of the sidebar instead of one per
+  section. It searches inside the open section and keeps applying when
+  switching sections. New Content > Sections controls: Show Search Box,
+  Search Placeholder, Search Icon. The per-row "Enable Search" switch is now
+  "Include in Search". Style > Search Box now also shows in Sections mode.
+* Sections mode: the category divider dash is back. Flat entries (Berita
+  Terbaru, Pengumuman) use the "Merged" divider, accordion headers use the
+  "Accordion" divider, so Style > Category Divider (Merged/Accordion) and
+  Category Name (Accordion) now show and apply in Sections mode too.
+* Sections mode: flat entries now stretch to the sidebar width instead of a
+  fixed `width: 100%`, so a negative Margin Left on Style > Sections Nav
+  (e.g. Active state) grows the button to the left and keeps its right
+  edge, instead of sliding the whole button left.
+* Sections mode: accordion header arrow now flips when collapsed.
 
 = 4.0.0 =
 * "Content Navigator": added a **Source Mode** control (Content > Source)

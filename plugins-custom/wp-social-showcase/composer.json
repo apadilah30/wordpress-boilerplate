@@ -1,8 +1,8 @@
 {
     "name": "boilerplate/wp-social-showcase",
-    "description": "Elementor widget — social platform tabs + 4x4 gallery grid + open-account button (manually curated, no API integration).",
+    "description": "Elementor widget — social platform tabs + per-platform panel (manual 4x4 gallery or feed-plugin shortcode) + open-account button. No direct API integration.",
     "type": "wordpress-plugin",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "license": "GPL-2.0-or-later",
     "require": {
         "composer/installers": "^2.0"

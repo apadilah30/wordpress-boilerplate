@@ -4,15 +4,15 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "605a24a81b5bc62dd72e4478ef122da6",
+    "content-hash": "3e9a8181c7c09b853ccb550c6f6243b4",
     "packages": [
         {
-            "name": "boilerplate/wp-boilerplate-announcement",
-            "version": "2.0.0",
+            "name": "boilerplate/wp-content-grid",
+            "version": "1.2.0",
             "dist": {
                 "type": "path",
-                "url": "plugins-custom/wp-boilerplate-announcement",
-                "reference": "a450e79ba443f80883cb1a16fc67ab0aa22de6b7"
+                "url": "plugins-custom/wp-content-grid",
+                "reference": "218ab1c838c5abc827088526275e30df2a4ffaf7"
             },
             "require": {
                 "composer/installers": "^2.0"
@@ -21,7 +21,70 @@
             "license": [
                 "GPL-2.0-or-later"
             ],
-            "description": "Reference plugin bawaan boilerplate — CPT + dynamic shortcode + i18n example.",
+            "description": "Elementor widget — featured news grid and video grid for any post type.",
+            "transport-options": {
+                "symlink": false,
+                "relative": true
+            }
+        },
+        {
+            "name": "boilerplate/wp-social-showcase",
+            "version": "1.1.0",
+            "dist": {
+                "type": "path",
+                "url": "plugins-custom/wp-social-showcase",
+                "reference": "0e3a0541013f622f22a3d8b243531f959e7133a9"
+            },
+            "require": {
+                "composer/installers": "^2.0"
+            },
+            "type": "wordpress-plugin",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "Elementor widget — social platform tabs + per-platform panel (manual 4x4 gallery or feed-plugin shortcode) + open-account button. No direct API integration.",
+            "transport-options": {
+                "symlink": false,
+                "relative": true
+            }
+        },
+        {
+            "name": "boilerplate/wp-taxonomy-grid",
+            "version": "4.6.0",
+            "dist": {
+                "type": "path",
+                "url": "plugins-custom/wp-taxonomy-grid",
+                "reference": "95bae0851cd02923a775540d89be0ac625cbadaa"
+            },
+            "require": {
+                "composer/installers": "^2.0"
+            },
+            "type": "wordpress-plugin",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "Dynamic master-detail shortcode grid for any CPT with any taxonomy. Supports Elementor.",
+            "transport-options": {
+                "symlink": false,
+                "relative": true
+            }
+        },
+        {
+            "name": "boilerplate/wp-timeline",
+            "version": "1.1.0",
+            "dist": {
+                "type": "path",
+                "url": "plugins-custom/wp-timeline",
+                "reference": "38289c28a0a30336d0696bbc6aba521e042f9c7d"
+            },
+            "require": {
+                "composer/installers": "^2.0"
+            },
+            "type": "wordpress-plugin",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "Elementor widget — vertical zig-zag timeline with every part editable.",
             "transport-options": {
                 "symlink": false,
                 "relative": true
@@ -2081,12 +2144,12 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": ">=8.2"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.6.0"
 }

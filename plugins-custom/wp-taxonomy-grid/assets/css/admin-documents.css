@@ -1,0 +1,89 @@
+/**
+ * Taxonomy Grid - "Document Files" meta box (admin only).
+ * Loaded only on the edit screen of a document post type.
+ */
+
+.wptg-doc-rows {
+    margin: 12px 0;
+}
+
+.wptg-doc-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 6px;
+    padding: 8px 10px;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.wptg-doc-placeholder {
+    min-height: 44px;
+    border: 1px dashed #8c8f94;
+    background: #f6f7f7;
+}
+
+.wptg-doc-handle {
+    flex: 0 0 auto;
+    color: #787c82;
+    cursor: move;
+}
+
+/* Small colored badge with the file extension: the "icon" of the file type. */
+.wptg-doc-ext {
+    flex: 0 0 auto;
+    min-width: 44px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: #787c82;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.6;
+    text-align: center;
+}
+
+.wptg-doc-ext--pdf {
+    background: #b32d2e;
+}
+
+.wptg-doc-ext--office {
+    background: #2271b1;
+}
+
+.wptg-doc-ext--image {
+    background: #00a32a;
+}
+
+.wptg-doc-name {
+    flex: 1 1 35%;
+    min-width: 0;
+}
+
+.wptg-doc-title {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.wptg-doc-size {
+    color: #787c82;
+    font-size: 12px;
+}
+
+.wptg-doc-label {
+    flex: 1 1 35%;
+    min-width: 0;
+}
+
+.wptg-doc-remove {
+    flex: 0 0 auto;
+    color: #b32d2e;
+}
+
+.wptg-doc-empty {
+    color: #787c82;
+}

@@ -29,6 +29,16 @@
     color: var(--wpcg-color-muted);
 }
 
+/* Editor-only hint (Link Mode = Media Popup but Taxonomy Grid is not active). */
+.wpcg-editor-note {
+    margin: 0 0 1rem;
+    padding: 0.5rem 0.75rem;
+    border-left: 3px solid var(--wpcg-color-accent);
+    background: var(--wpcg-color-bg-muted);
+    font-size: 0.85rem;
+    color: var(--wpcg-color-text);
+}
+
 /* --- Section header --- */
 .wpcg-header {
     display: flex;

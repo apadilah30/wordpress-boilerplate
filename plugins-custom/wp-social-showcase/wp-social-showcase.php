@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Social Media Showcase
- * Description: Elementor widget — social platform tabs (icon switcher) + a 4x4 gallery grid + an "Open Account" button per platform.
- * Version:     1.0.0
+ * Description: Elementor widget — social platform tabs (icon switcher) + per-platform panel (manual 4x4 gallery or a feed-plugin shortcode) + an "Open Account" button.
+ * Version:     1.1.0
  * Author:      Apadilah
  * Text Domain: wp-social-showcase
  * Requires Plugins: elementor
@@ -10,14 +10,16 @@
  * No social media API integration here on purpose — managing OAuth/token
  * refresh/rate limits for Instagram/Facebook/X/TikTok is a significant,
  * ongoing maintenance burden better left to a dedicated, actively
- * maintained plugin (e.g. the already-installed Feed Them Social) if a
- * LIVE feed is ever needed.
+ * maintained feed plugin (e.g. Smash Balloon, Feed Them Social).
  *
- * This widget is for a MANUALLY curated showcase instead: an admin picks
- * up to 16 images per platform (via the Media Library) and an account
- * URL. Clicking a platform icon switches the gallery + the "Open" button
- * target — all client-side, no AJAX needed since every platform's
- * gallery is already in the page.
+ * Each platform panel has two modes:
+ *   - Manual Gallery (default): an admin picks up to 16 images per
+ *     platform (via the Media Library) and an account URL.
+ *   - Shortcode: the panel prints the output of a feed plugin's shortcode,
+ *     so the feed updates itself. This widget only keeps the icon tabs and
+ *     the "Open Account" button.
+ * Clicking a platform icon switches the panel + the "Open" button target —
+ * all client-side, no AJAX needed since every panel is already in the page.
  *
  * @package WpSocialShowcase
  */
@@ -30,20 +32,21 @@ if (!defined('ABSPATH')) {
 
 define('WPSS_PATH', plugin_dir_path(__FILE__));
 define('WPSS_URL', plugin_dir_url(__FILE__));
+define('WPSS_VERSION', '1.1.0');
 
 add_action('wp_enqueue_scripts', static function (): void {
     wp_enqueue_style(
         'wpss-styles',
         WPSS_URL . 'assets/css/social-showcase.css',
         [],
-        '1.0.0'
+        WPSS_VERSION
     );
 
     wp_enqueue_script(
         'wpss-scripts',
         WPSS_URL . 'assets/js/social-showcase.js',
         [],
-        '1.0.0',
+        WPSS_VERSION,
         true
     );
 });
@@ -61,13 +64,15 @@ add_action('elementor/widgets/register', static function ($widgets_manager): voi
 });
 
 /**
- * Render the whole widget: tab bar (one tab per platform) + one gallery
- * panel per platform (first one visible by default) + the "Open" button.
+ * Render the whole widget: tab bar (one tab per platform) + one panel per
+ * platform (first one visible by default) + the "Open" button.
  *
  * @param array<string,mixed> $atts
  *   'title'        => string
  *   'open_text'    => string
- *   'platforms'    => array<int,array{icon:mixed,label:string,url:string,gallery:array<int,array{id:int,url:string}>}>
+ *   'platforms'    => array<int,array{icon:mixed,label:string,url:string,gallery:array<int,array{id:int,url:string}>,feed_source?:string,shortcode?:string}>
+ *                     feed_source 'manual' (default) shows the gallery,
+ *                     'shortcode' prints the feed plugin shortcode instead.
  *   'class'        => string
  */
 function wpss_render_showcase(array $atts): string
@@ -111,19 +116,88 @@ function wpss_render_showcase(array $atts): string
         <div class="wpss-panels">
             <?php foreach ($platforms as $index => $platform): ?>
                 <div class="wpss-panel <?php echo $index === 0 ? 'active' : ''; ?>" data-panel-index="<?php echo esc_attr($index); ?>">
-                    <div class="wpss-gallery">
-                        <?php foreach (array_slice($platform['gallery'], 0, 16) as $image): ?>
-                            <a class="wpss-gallery-item" href="<?php echo esc_url($platform['url']); ?>" target="_blank" rel="noopener noreferrer">
-                                <img src="<?php echo esc_url($image['url']); ?>" alt="" loading="lazy">
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
+                    <?php if (($platform['feed_source'] ?? 'manual') === 'shortcode'): ?>
+                        <div class="wpss-feed">
+                            <?php
+                            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- HTML dari plugin feed, tanggung jawab plugin tsb.
+                            echo wpss_render_feed_shortcode((string) ($platform['shortcode'] ?? ''));
+                            ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="wpss-gallery">
+                            <?php foreach (array_slice($platform['gallery'], 0, 16) as $image): ?>
+                                <a class="wpss-gallery-item" href="<?php echo esc_url($platform['url']); ?>" target="_blank" rel="noopener noreferrer">
+                                    <img src="<?php echo esc_url($image['url']); ?>" alt="" loading="lazy">
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         </div>
     </div>
     <?php
     return ob_get_clean();
+}
+
+/**
+ * Return the shortcode string only if it is nothing but registered
+ * shortcode(s), otherwise ''.
+ *
+ * Kenapa dicek: nilai ini diketik di editor lalu dieksekusi do_shortcode().
+ * Kita tidak mau teks/HTML lain ikut tercetak lewat jalur ini, jadi sisa
+ * string setelah semua shortcode terdaftar dibuang harus kosong. Efek
+ * samping: shortcode dari plugin yang tidak aktif juga dianggap tidak valid.
+ */
+function wpss_clean_shortcode(string $raw): string
+{
+    $value = trim($raw);
+
+    if ($value === '' || !str_starts_with($value, '[') || !str_ends_with($value, ']')) {
+        return '';
+    }
+
+    $leftover = preg_replace('/' . get_shortcode_regex() . '/', '', $value);
+    if ($leftover === null || trim($leftover) !== '') {
+        return '';
+    }
+
+    return $value;
+}
+
+/**
+ * Small notice shown only to users who can edit content, so visitors never
+ * see setup errors.
+ */
+function wpss_render_editor_note(string $message): string
+{
+    if (!current_user_can('edit_posts')) {
+        return '';
+    }
+
+    return '<p class="wpss-note">' . esc_html($message) . '</p>';
+}
+
+/**
+ * Run a feed plugin shortcode and return its HTML as-is (escaping it is
+ * the feed plugin's job). Editors get a hint when the shortcode is
+ * invalid or the feed came back empty; visitors get nothing.
+ */
+function wpss_render_feed_shortcode(string $raw_shortcode): string
+{
+    $shortcode = wpss_clean_shortcode($raw_shortcode);
+
+    if ($shortcode === '') {
+        return wpss_render_editor_note(__('Shortcode tidak valid', 'wp-social-showcase'));
+    }
+
+    $output = do_shortcode($shortcode);
+
+    if (trim($output) === '') {
+        return wpss_render_editor_note(__('Feed kosong: cek koneksi akun di plugin feed', 'wp-social-showcase'));
+    }
+
+    return $output;
 }
 
 /**

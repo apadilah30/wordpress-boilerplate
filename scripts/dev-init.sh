@@ -141,7 +141,6 @@ else
     # - polylang + loco-translate : multilingual + string translation
     # - shortcodes-ultimate : ready-made shortcode library
     # - members : role & permission management
-    # - wp-boilerplate-announcement : reference custom plugin
     DEFAULT_PLUGINS=(
         elementor
         elementskit-lite
@@ -151,7 +150,6 @@ else
         loco-translate
         shortcodes-ultimate
         members
-        wp-boilerplate-announcement
     )
     for plugin in "${DEFAULT_PLUGINS[@]}"; do
         "${COMPOSE[@]}" exec -T -u www-data app wp plugin activate "$plugin" --path=/app/web/wp \

@@ -131,6 +131,24 @@
     transform: scale(1.05);
 }
 
+/* --- Feed (shortcode mode) ---
+   Only the outer box is styled here. The feed's own look is configured
+   in the feed plugin. */
+.wpss-feed {
+    display: block;
+    width: 100%;
+}
+
+/* Setup hint, rendered only for users who can edit content. */
+.wpss-note {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border: 1px dashed var(--wpss-color-muted);
+    border-radius: 6px;
+    color: var(--wpss-color-muted);
+    font-size: 0.85rem;
+}
+
 /* --- Responsive --- */
 @media (max-width: 600px) {
     .wpss-gallery {

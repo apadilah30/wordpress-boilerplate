@@ -6,16 +6,13 @@
  *   - "grid":     category click + AJAX posts-grid swap (legacy)
  *   - "sections": N independent sidebar sections (flat list or taxonomy
  *                 accordion) sharing ONE content panel — the Content
- *                 Navigator. See initSectionsMode().
+ *                 Navigator. See initSectionsMode(). A deep link
+ *                 (?wptg_section=...&wptg_term=...) is resolved by PHP; the
+ *                 JS only scrolls to the widget (data-deep-link="1").
  */
 
 (function () {
     'use strict';
-
-    // Keyed by search <input> element — lazily populated the first time a
-    // given input fires, so each section's own search box gets its OWN
-    // debounce timer instead of sharing/resetting one global timer.
-    const debouncedHandlers = new WeakMap();
 
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.wptg-wrapper').forEach(function (wrapper) {
@@ -82,7 +79,9 @@
      * selector so one function serves both modes.
      */
     function loadSinglePost(wrapper, postId, postType, includeMeta) {
-        const container = wrapper.querySelector('.wptg-detail-container, .wptg-sections-content');
+        // In Sections mode only the inner panel is swapped, so the content
+        // title and the content search box stay on screen.
+        const container = wrapper.querySelector('.wptg-detail-container, .wptg-sections-panel');
         if (!container) {
             return;
         }
@@ -281,6 +280,7 @@
     function wptgListClassFor(contentStyle) {
         if (contentStyle === 'grid_thumbnail') return 'wptg-posts-grid';
         if (contentStyle === 'list_thumbnail') return 'wptg-list-thumbnail';
+        if (contentStyle === 'document_list') return 'wptg-doc-list';
         return 'wptg-numbered-feed';
     }
 
@@ -295,12 +295,20 @@
      * in the sidebar, then marks the clicked one.
      */
     function markActiveNav(sidebar, trigger) {
+        clearActiveNav(sidebar);
+        trigger.classList.add('active');
+        trigger.setAttribute('aria-pressed', 'true');
+    }
+
+    /**
+     * Clears the active state of every nav trigger. Also used on its own when
+     * an empty section (no trigger to mark) becomes the open one.
+     */
+    function clearActiveNav(sidebar) {
         sidebar.querySelectorAll('.wptg-section-nav-trigger, .wptg-section-term-trigger').forEach(function (el) {
             el.classList.remove('active');
             el.setAttribute('aria-pressed', 'false');
         });
-        trigger.classList.add('active');
-        trigger.setAttribute('aria-pressed', 'true');
     }
 
     /**
@@ -331,10 +339,20 @@
      * page.
      */
     function fetchSectionItems(wrapper, group, sectionState, append) {
-        const content = wrapper.querySelector('.wptg-sections-content');
-        const target = append ? content.querySelector('.wptg-section-items-wrap') : content;
+        const panel = wrapper.querySelector('.wptg-sections-panel');
+        const itemsWrap = append ? panel.querySelector('.wptg-section-items-wrap') : null;
+        const loadMoreBtn = itemsWrap ? itemsWrap.querySelector('.wptg-load-more') : null;
 
-        target.classList.add('wptg-loading');
+        // "Load more" only marks its own button as busy (and disables it, so a
+        // double click cannot request the same page twice). A section switch or
+        // search dims the whole panel instead.
+        const busyEl = loadMoreBtn || panel;
+        const errorHost = itemsWrap || panel;
+        setBusy(busyEl, true);
+
+        // The feed look (layout, number, excerpt, read-more text) lives on the
+        // wrapper, so items from AJAX look the same as the server-rendered ones.
+        const feed = wrapper.dataset;
 
         fetch(wptg_ajax.ajax_url, {
             method: 'POST',
@@ -350,55 +368,111 @@
                 page: String(sectionState.page),
                 posts_per_page: group.dataset.postsPerPage,
                 search: sectionState.search || '',
+                feed_layout: feed.feedLayout || '',
+                show_number: feed.showNumber || '1',
+                excerpt_length: feed.excerptLength || '40',
+                readmore_text: feed.readmoreText || '',
+                doc_options: feed.docOptions || '',
             }),
         })
             .then((response) => response.json())
             .then((data) => {
-                target.classList.remove('wptg-loading');
+                setBusy(busyEl, false);
 
                 if (!data.success) {
                     if (append) {
                         sectionState.page -= 1; // roll back: this page was never actually appended.
                     }
-                    target.insertAdjacentHTML('beforeend', '<div class="wptg-empty"><p>' + (data.data && data.data.message ? data.data.message : 'Error loading items.') + '</p></div>');
+                    errorHost.insertAdjacentHTML('beforeend', '<div class="wptg-empty"><p>' + (data.data && data.data.message ? data.data.message : 'Error loading items.') + '</p></div>');
                     return;
                 }
 
                 if (append) {
-                    const list = target.querySelector(':scope > div');
+                    const list = itemsWrap.querySelector(':scope > div');
                     list.insertAdjacentHTML('beforeend', data.data.html);
-                    target.dataset.page = String(sectionState.page);
-                    const loadMoreBtn = target.querySelector('.wptg-load-more');
+                    itemsWrap.dataset.page = String(sectionState.page);
                     if (loadMoreBtn && !data.data.has_more) {
                         loadMoreBtn.remove();
                     }
+                    fillIconSlots(wrapper);
+                    return;
+                }
+
+                // Empty state (search without hits, section/term without items):
+                // the server already built the skeleton. Show it as is, with no
+                // items wrapper and no Load More button.
+                if (data.data.empty) {
+                    panel.innerHTML = data.data.html;
                     return;
                 }
 
                 // Replace: rebuild the exact SSR shape so a later "load more" works identically.
                 const listClass = wptgListClassFor(group.dataset.contentStyle);
                 const loadMoreHtml = data.data.has_more
-                    ? '<button type="button" class="wptg-load-more">Lihat Lebih Banyak</button>'
+                    ? '<button type="button" class="wptg-load-more"></button>'
                     : '';
-                content.innerHTML = '<div class="wptg-section-items-wrap" data-section-index="' + group.dataset.sectionIndex + '" data-term-id="' + (sectionState.termId || 0) + '" data-page="1">'
+                panel.innerHTML = '<div class="wptg-section-items-wrap" data-section-index="' + group.dataset.sectionIndex + '" data-term-id="' + (sectionState.termId || 0) + '" data-page="1">'
                     + '<div class="' + listClass + '">' + data.data.html + '</div>'
                     + loadMoreHtml
                     + '</div>';
+
+                // textContent (not innerHTML) so the editor-typed label can never inject markup.
+                const newLoadMoreBtn = panel.querySelector('.wptg-load-more');
+                if (newLoadMoreBtn) {
+                    newLoadMoreBtn.textContent = feed.loadMoreText || 'Lihat Lebih Banyak';
+                }
+                fillIconSlots(wrapper);
             })
             .catch((error) => {
-                target.classList.remove('wptg-loading');
+                setBusy(busyEl, false);
                 if (append) {
                     sectionState.page -= 1; // network/parse failure: also roll back.
                 }
-                target.insertAdjacentHTML('beforeend', '<div class="wptg-empty"><p>Error loading items.</p></div>');
+                errorHost.insertAdjacentHTML('beforeend', '<div class="wptg-empty"><p>Error loading items.</p></div>');
                 console.error('Taxonomy Grid AJAX Error:', error);
             });
     }
 
     /**
+     * Loading state. The "load more" button gets .is-loading + disabled; any
+     * other element (the content panel) gets the shared .wptg-loading class.
+     */
+    function setBusy(el, isBusy) {
+        if (el.classList.contains('wptg-load-more')) {
+            el.classList.toggle('is-loading', isBusy);
+            el.disabled = isBusy;
+            el.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+            return;
+        }
+        el.classList.toggle('wptg-loading', isBusy);
+    }
+
+    /**
+     * Items that arrive via AJAX have an empty icon slot (the server never
+     * receives icon markup): the read-more icon of feed cards and the Card Icon
+     * of document cards. Copy the icon from the <template> the server rendered
+     * once inside the wrapper. The skeleton's grey icon block is also an empty
+     * .wptg-doc-icon, so it is skipped.
+     */
+    function fillIconSlots(wrapper) {
+        [
+            ['.wptg-readmore-icon-template', '.wptg-feed-readmore-icon:empty'],
+            ['.wptg-doc-icon-template', '.wptg-doc-icon:empty:not(.wptg-skeleton-block)'],
+        ].forEach(function (pair) {
+            const template = wrapper.querySelector(pair[0]);
+
+            if (!template) {
+                return;
+            }
+            wrapper.querySelectorAll(pair[1]).forEach(function (slot) {
+                slot.innerHTML = template.innerHTML;
+            });
+        });
+    }
+
+    /**
      * Fetches a post's full content and shows it inside the shared modal
-     * (Pengumuman's click_behavior = modal, and the video graceful
-     * fallback when neither an external URL nor an attachment is set).
+     * (click_behavior = modal on a post-style item such as Pengumuman).
      */
     function loadSinglePostIntoModal(postId, postType) {
         fetch(wptg_ajax.ajax_url, {
@@ -444,17 +518,9 @@
             return;
         }
 
-        if (behavior === 'redirect_or_popup_player') {
-            if (item.dataset.externalUrl) {
-                window.open(item.dataset.externalUrl, '_blank', 'noopener');
-            } else if (item.dataset.videoSrc) {
-                WptgModal.open('video', { src: item.dataset.videoSrc, poster: item.dataset.poster || '' });
-            } else {
-                // Graceful fallback for a mis-configured video post (FR-6):
-                // show the normal post-detail modal instead of doing nothing.
-                loadSinglePostIntoModal(item.dataset.postId, item.dataset.postType);
-            }
-        }
+        // behavior === 'media_popup' and 'document_preview' are deliberately NOT
+        // handled here: those items carry data-wptg-media and media-popup.js (one
+        // listener on document) opens the popup. Handling it twice would open it twice.
     }
 
     /**
@@ -501,12 +567,99 @@
             };
         }
 
+        // The widget has ONE search box (top of the sidebar). `searchQuery`
+        // is what was typed; `activeSectionIndex` is the section currently
+        // open. The query applies to the open section and is re-applied
+        // whenever another section is opened.
+        let searchQuery = '';
+        let activeSectionIndex = null;
+
+        const getGroup = function (index) {
+            return sidebar.querySelector('.wptg-section-group[data-section-index="' + index + '"]');
+        };
+
+        // Header title + last breadcrumb item follow the open section, unless
+        // the editor typed a fixed Title / Current Label (the server sets
+        // data-dynamic-title / data-dynamic-crumb to "1" only when empty).
+        const headerTitle = wrapper.querySelector('.wptg-header-title');
+        const crumbCurrent = wrapper.querySelector('.wptg-breadcrumb-current');
+        const contentTitle = wrapper.querySelector('.wptg-content-title');
+        const syncLabels = function (group) {
+            const label = group ? group.dataset.sectionLabel : '';
+            if (!label) return;
+
+            if (wrapper.dataset.dynamicTitle === '1' && headerTitle) {
+                headerTitle.textContent = label;
+            }
+            if (wrapper.dataset.dynamicCrumb === '1' && crumbCurrent) {
+                crumbCurrent.textContent = label;
+            }
+            if (wrapper.dataset.dynamicContentTitle === '1' && contentTitle) {
+                contentTitle.textContent = label;
+            }
+        };
+
+        if (itemsWrap) {
+            activeSectionIndex = itemsWrap.dataset.sectionIndex;
+        } else {
+            const activePost = sidebar.querySelector('.wptg-post-li.active');
+            const activeGroup = activePost ? activePost.closest('.wptg-section-group') : null;
+            // Empty state: the panel is a skeleton (no items wrapper, no active
+            // post), so the server tells us the open section.
+            activeSectionIndex = activeGroup ? activeGroup.dataset.sectionIndex : (content.dataset.activeSection || null);
+        }
+
+        // single_detail sections have no paginated feed to re-query, so the
+        // query filters their sidebar tree instead (DOM filter, same as the
+        // legacy sidebar search). Only the open section is filtered; every
+        // other one is reset.
+        const filterDetailGroups = function () {
+            const active = activeSectionIndex !== null ? getGroup(activeSectionIndex) : null;
+
+            sidebar.querySelectorAll('.wptg-section-group[data-content-style="single_detail"]').forEach(function (group) {
+                const isSearched = group === active && group.dataset.searchEnabled === '1';
+                filterWithinSectionGroup(group, isSearched ? searchQuery.toLowerCase() : '');
+            });
+        };
+
+        // Apply the current query to the open section: filter the sidebar for
+        // single_detail, otherwise re-query its items from page 1 (so older,
+        // not-yet-loaded items are searched too).
+        const applySearch = function () {
+            filterDetailGroups();
+
+            const active = activeSectionIndex !== null ? getGroup(activeSectionIndex) : null;
+            if (!active || active.dataset.contentStyle === 'single_detail' || active.dataset.searchEnabled !== '1') {
+                return;
+            }
+
+            const current = state[activeSectionIndex] || {};
+            state[activeSectionIndex] = { page: 1, termId: current.termId || 0, search: searchQuery };
+            fetchSectionItems(wrapper, active, state[activeSectionIndex], /* append */ false);
+        };
+
         // Accordion toggles (section-level and, for single_detail, nested
         // term-level) reuse the SAME shared helper as legacy detail mode's
         // own accordion.
         sidebar.querySelectorAll('.wptg-section-toggle').forEach(function (toggle) {
             toggle.addEventListener('click', function () {
-                bindAccordionToggle(toggle, toggle.closest('.wptg-section-group'));
+                const group = toggle.closest('.wptg-section-group');
+                bindAccordionToggle(toggle, group);
+
+                // A section without terms has no term button to click, so its
+                // header also opens it. The server answers with the skeleton for
+                // its content style (same source as the first page load).
+                if (!group.querySelector('.wptg-section-term-li') && activeSectionIndex !== group.dataset.sectionIndex) {
+                    const sectionIndex = group.dataset.sectionIndex;
+                    clearActiveNav(sidebar);
+                    activeSectionIndex = sectionIndex;
+                    syncLabels(group);
+                    filterDetailGroups();
+
+                    const search = group.dataset.searchEnabled === '1' ? searchQuery : '';
+                    state[sectionIndex] = { page: 1, termId: 0, search: search };
+                    fetchSectionItems(wrapper, group, state[sectionIndex], /* append */ false);
+                }
             });
         });
         sidebar.querySelectorAll('.wptg-term-toggle').forEach(function (toggle) {
@@ -526,14 +679,28 @@
             const termId = termLi ? parseInt(termLi.dataset.termId, 10) : 0;
 
             markActiveNav(sidebar, trigger);
-            state[sectionIndex] = { page: 1, termId: termId, search: '' };
+            activeSectionIndex = sectionIndex;
+            syncLabels(group);
+            filterDetailGroups();
+
+            // The one search box keeps applying after switching sections.
+            const search = group.dataset.searchEnabled === '1' ? searchQuery : '';
+            state[sectionIndex] = { page: 1, termId: termId, search: search };
             fetchSectionItems(wrapper, group, state[sectionIndex], /* append */ false);
         });
 
         // single_detail's nested post triggers reuse the normal item-click path.
         sidebar.addEventListener('click', function (e) {
             const postTrigger = e.target.closest('.wptg-post-trigger[data-click-behavior]');
-            if (postTrigger) handleItemClick(wrapper, postTrigger);
+            if (!postTrigger) return;
+
+            const postGroup = postTrigger.closest('.wptg-section-group');
+            if (postGroup) {
+                activeSectionIndex = postGroup.dataset.sectionIndex;
+                syncLabels(postGroup);
+                filterDetailGroups();
+            }
+            handleItemClick(wrapper, postTrigger);
         });
 
         content.addEventListener('click', function (e) {
@@ -547,38 +714,45 @@
                 return;
             }
 
+            // The "Unduh" link of a document card only downloads its file; it is not a click on the item.
+            if (e.target.closest('a[download]')) return;
+
             const item = e.target.closest('[data-click-behavior]');
             if (item) handleItemClick(wrapper, item);
         });
 
-        // Per-section search: taxonomy_accordion sections reuse the
-        // EXISTING DOM-filter pattern (scoped to just that section's own
-        // group — same mechanism as the legacy sidebar search, unchanged);
-        // flat_list sections trigger a fresh AJAX query. Debounced PER
-        // INPUT ELEMENT (via the module-level WeakMap), not with one
-        // shared debounce for the whole sidebar, so two sections' search
-        // boxes never share/reset each other's timer.
-        sidebar.addEventListener('input', function (e) {
-            const input = e.target.closest('.wptg-section-search-input');
-            if (!input) return;
-
-            if (!debouncedHandlers.has(input)) {
-                debouncedHandlers.set(input, debounce(function () {
-                    const group = input.closest('.wptg-section-group');
-                    const query = input.value.trim().toLowerCase();
-
-                    if (group.dataset.sectionType === 'taxonomy_accordion') {
-                        filterWithinSectionGroup(group, query);
-                        return;
+        // Search. There can be two inputs (sidebar + content, "Search Position:
+        // Both"), but only ONE state (`searchQuery`) and one debounced search:
+        // typing in either input copies the text into the other one.
+        const searchInputs = wrapper.querySelectorAll('.wptg-search-input');
+        const runSearch = debounce(applySearch, 300);
+        searchInputs.forEach(function (input) {
+            input.addEventListener('input', function () {
+                searchQuery = input.value.trim();
+                searchInputs.forEach(function (other) {
+                    if (other !== input) {
+                        other.value = input.value;
                     }
-
-                    const sectionIndex = group.dataset.sectionIndex;
-                    state[sectionIndex] = { page: 1, termId: 0, search: input.value.trim() };
-                    fetchSectionItems(wrapper, group, state[sectionIndex], /* append */ false);
-                }, 300));
-            }
-
-            debouncedHandlers.get(input)();
+                });
+                runSearch();
+            });
         });
+
+        fillIconSlots(wrapper);
+
+        // Deep link (?wptg_section=...): the server already opened the right
+        // section/term, so the visitor only needs to land on the widget. Wait
+        // for "load" so images above it cannot push the widget out of view
+        // afterwards. Runs once per page load; later clicks never scroll.
+        if (wrapper.dataset.deepLink === '1') {
+            const scrollToWidget = function () {
+                wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            };
+            if (document.readyState === 'complete') {
+                scrollToWidget();
+            } else {
+                window.addEventListener('load', scrollToWidget, { once: true });
+            }
+        }
     }
 })();

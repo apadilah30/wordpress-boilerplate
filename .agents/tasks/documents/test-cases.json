@@ -1,0 +1,51 @@
+{
+  "kind": [
+    ["application/pdf", "pdf", "pdf"],
+    ["application/msword", "doc", "office"],
+    ["application/vnd.openxmlformats-officedocument.wordprocessingml.document", "docx", "office"],
+    ["image/jpeg", "jpg", "image"],
+    ["image/png", "png", "image"],
+    ["image/webp", "webp", "image"],
+    ["IMAGE/PNG", "", "image"],
+    ["application/octet-stream", "pdf", "pdf"],
+    ["application/octet-stream", "DOCX", "office"],
+    ["", "jpg", "image"],
+    ["", "JPEG", "image"],
+    ["image/gif", "gif", "other"],
+    ["application/zip", "zip", "other"],
+    ["text/plain", "txt", "other"],
+    ["", "", "other"]
+  ],
+  "public_url": [
+    ["https://imigrasi.go.id/app/uploads/a.docx", true],
+    ["https://IMIGRASI.GO.ID/app/uploads/a.docx", true],
+    ["http://imigrasi.go.id/a.docx", true],
+    ["https://www.example.com/a.docx", true],
+    ["https://example.com:443/a.docx", true],
+    ["http://example.com:80/a.docx", true],
+    ["http://8.8.8.8/a.docx", true],
+    ["http://172.32.0.1/a.docx", true],
+    ["http://localhost/a.docx", false],
+    ["http://localhost:6300/app/uploads/a.docx", false],
+    ["https://imigrasi.test/a.docx", false],
+    ["https://site.local/a.docx", false],
+    ["https://foo.localhost/a.docx", false],
+    ["https://intranet.internal/a.docx", false],
+    ["https://nas.lan/a.docx", false],
+    ["http://app/a.docx", false],
+    ["http://127.0.0.1/a.docx", false],
+    ["http://192.168.1.10/a.docx", false],
+    ["http://10.0.0.5:8080/a.docx", false],
+    ["http://172.16.0.1/a.docx", false],
+    ["http://169.254.1.1/a.docx", false],
+    ["http://[::1]/a.docx", false],
+    ["https://example.com:8443/a.docx", false],
+    ["ftp://example.com/a.docx", false],
+    ["/app/uploads/a.docx", false],
+    ["", false]
+  ],
+  "embed": [
+    ["https://imigrasi.go.id/app/uploads/a.docx", "https://view.officeapps.live.com/op/embed.aspx?src=https%3A%2F%2Fimigrasi.go.id%2Fapp%2Fuploads%2Fa.docx"],
+    ["https://x.com/a b(1)!.docx", "https://view.officeapps.live.com/op/embed.aspx?src=https%3A%2F%2Fx.com%2Fa%20b%281%29%21.docx"]
+  ]
+}

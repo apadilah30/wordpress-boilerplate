@@ -2,7 +2,7 @@
     "name": "boilerplate/wp-taxonomy-grid",
     "description": "Dynamic master-detail shortcode grid for any CPT with any taxonomy. Supports Elementor.",
     "type": "wordpress-plugin",
-    "version": "4.0.0",
+    "version": "4.6.0",
     "license": "GPL-2.0-or-later",
     "require": {
         "composer/installers": "^2.0"

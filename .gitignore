@@ -13,6 +13,8 @@ web/app/languages/
 
 # Keep composer.lock tracked for reproducible builds
 vendor/
+# ...but the PDF.js copy shipped inside our own plugin (assets/vendor/pdfjs) must be committed.
+!plugins-custom/*/assets/vendor/
 
 # --- Environment secrets ---
 .env
@@ -51,3 +53,7 @@ node_modules/
 
 # --- Zip files ---
 *.zip
+# --- Agent scratch output (task notes in .agents/tasks/*.md are kept) ---
+.agents/tasks/**/*.out
+.agents/tasks/**/preview*.html
+.agents/tasks/**/markup-sample.html

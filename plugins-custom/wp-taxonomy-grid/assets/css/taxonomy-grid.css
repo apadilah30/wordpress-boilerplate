@@ -44,14 +44,6 @@
     box-sizing: border-box;
 }
 
-.wptg-error {
-    color: #b91c1c;
-    padding: 1rem;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: var(--wptg-radius);
-}
-
 /* ==========================================================================
    DETAIL MODE
    ========================================================================== */
@@ -75,7 +67,20 @@
     position: relative;
 }
 
+/* Subtitle on top, then one row with the title between the two decorative
+   lines. `stretch` keeps the subtitle full width so its text-align control
+   (Style > Header > Subtitle > Alignment) still works. */
 .wptg-header-flex {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.wptg-header-subtitle {
+    text-align: center;
+}
+
+.wptg-header-title-row {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -429,12 +434,10 @@
    GRID MODE (legacy)
    ========================================================================== */
 
-.wptg-wrapper.wptg-mode-grid {
-    display: flex;
-    gap: 2rem;
-    padding: 1.5rem;
-}
-
+/* Grid mode now has the same header + breadcrumb as every other layout, so
+   the sidebar + posts row lives in an inner `.wptg-body.wptg-grid-body`
+   (flex, gap and padding come from `.wptg-body`, same as detail mode)
+   instead of the wrapper being the flex row itself. */
 .wptg-categories {
     flex: 0 0 280px;
     min-width: 250px;
@@ -575,37 +578,36 @@
     position: relative;
 }
 
+/* h2 above the list. */
+.wptg-content-title {
+    margin: 0 0 1rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--wptg-color-primary);
+}
+
+/* The sidebar search has a bottom margin for the list under it; the content
+   search sits under the title instead and takes the full content width. */
+.wptg-search--content {
+    width: 100%;
+    margin-bottom: 1.25rem;
+}
+
+/* The only part JS swaps. `.wptg-loading` (shared) dims it while fetching. */
+.wptg-sections-panel {
+    position: relative;
+}
+
 .wptg-section-group--flat {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
 }
 
-/* --- Per-section search (shared box styling, reuses legacy search look) --- */
-.wptg-section-search {
-    position: relative;
-    margin: 0 0 0.75rem;
-}
-
-.wptg-section-search-input {
-    width: 100%;
-    padding: 0.7rem 1.1rem;
-    border: 1px solid var(--wptg-color-border);
-    border-radius: 20px;
-    background: var(--wptg-color-bg-muted);
-    font-size: 0.9rem;
-    color: var(--wptg-color-text);
-}
-
-.wptg-section-search-input::placeholder {
-    color: var(--wptg-color-muted);
-}
-
-.wptg-section-search-input:focus {
-    outline: 2px solid var(--wptg-color-accent);
-    outline-offset: 1px;
-}
-
+/* The search box in Sections mode is ONE shared box at the top of the
+   sidebar and reuses the legacy .wptg-search* rules above, so there are no
+   section-specific search styles here. */
 .wptg-section-no-results {
     padding: 0.5rem 0.25rem;
     color: var(--wptg-color-muted);
@@ -614,8 +616,16 @@
 
 /* --- Flat nav trigger (Berita Terbaru / Pengumuman sidebar button) --- */
 .wptg-section-nav-trigger {
-    display: block;
-    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    /* Stretch to the group's width instead of a fixed `width: 100%`. With a
+       fixed width a negative Margin Left slides the whole button left and
+       leaves a gap on the right; with stretch the button GROWS to the left
+       and keeps its right edge (Style > Sections Nav > Margin). */
+    align-self: stretch;
+    width: auto;
     text-align: left;
     background: none;
     border: none;
@@ -661,6 +671,10 @@
     list-style: none;
     margin: 0.6rem 0 0;
     padding: 0 0 0 1.4rem;
+    /* Flex column so "Gap Between Terms" (Style > Accordion Terms) is a real gap. */
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
     max-height: 2000px;
     overflow: hidden;
     transition: max-height 0.25s ease;
@@ -673,8 +687,13 @@
     max-height: 0;
 }
 
+/* Same collapsed-arrow flip as the legacy .wptg-term-group:not(.open). */
+.wptg-section-group:not(.open) .wptg-section-toggle .wptg-term-chevron {
+    transform: rotate(180deg);
+}
+
 .wptg-section-term-li {
-    margin-bottom: 0.2rem;
+    margin: 0;
 }
 
 .wptg-section-term-trigger {
@@ -716,32 +735,47 @@
     gap: 1.25rem;
 }
 
+/* Card = cream box. Two variants share it:
+     --featured: image left (half the card), number/date/title/excerpt/read-more right.
+     --compact:  small thumbnail left, number + date/title/read-more in a row, no excerpt.
+   Image sizes come from CSS variables so Style > Feed Cards can change them
+   without fighting the plugin CSS. */
 .wptg-feed-item {
     display: flex;
     gap: 1rem;
-    align-items: flex-start;
+    align-items: stretch;
+    padding: 0.75rem;
     cursor: pointer;
-    border-radius: var(--wptg-radius);
-    transition: background 0.15s ease;
+    background-color: #fbf6e9;
+    border-radius: 12px;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .wptg-feed-item:hover {
-    background-color: var(--wptg-color-bg-muted);
-}
-
-.wptg-feed-item--featured {
-    align-items: stretch;
-}
-
-.wptg-feed-item--featured .wptg-feed-thumb {
-    flex: 0 0 220px;
+    background-color: #f6edd3;
 }
 
 .wptg-feed-thumb {
     position: relative;
-    flex: 0 0 140px;
-    border-radius: var(--wptg-radius);
     overflow: hidden;
+    border-radius: 8px;
+    background: var(--wptg-color-border);
+}
+
+.wptg-feed-item--featured .wptg-feed-thumb {
+    flex: 0 0 var(--wptg-feed-featured-width, 50%);
+    min-height: var(--wptg-feed-featured-height, 250px);
+}
+
+.wptg-feed-item--compact {
+    align-items: center;
+    padding: 0.4rem 0.9rem 0.4rem 0.4rem;
+}
+
+.wptg-feed-item--compact .wptg-feed-thumb {
+    flex: 0 0 var(--wptg-feed-compact-width, 90px);
+    width: var(--wptg-feed-compact-width, 90px);
+    height: var(--wptg-feed-compact-height, 60px);
 }
 
 .wptg-feed-thumb img {
@@ -751,23 +785,42 @@
     display: block;
 }
 
-.wptg-feed-badge {
-    position: absolute;
-    top: 0.5rem;
-    left: 0.5rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 2rem;
-    padding: 0.25rem 0.5rem;
-    background: var(--wptg-color-primary);
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 700;
-    border-radius: 4px;
+.wptg-feed-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    gap: 0.75rem;
 }
 
-.wptg-feed-body {
+.wptg-feed-item--featured .wptg-feed-body {
+    flex-direction: column;
+    padding: 0.5rem 0.75rem 0.25rem 0.25rem;
+}
+
+.wptg-feed-item--compact .wptg-feed-body {
+    flex-direction: row;
+    align-items: center;
+}
+
+/* The number. Class name kept from the old badge so saved Style >
+   Numbered Feed > Badge Number settings still apply. */
+.wptg-feed-badge {
+    flex: 0 0 auto;
+    display: inline-block;
+    line-height: 1;
+    font-weight: 700;
+    color: var(--wptg-color-accent);
+}
+
+.wptg-feed-item--featured .wptg-feed-badge {
+    font-size: 2.6rem;
+}
+
+.wptg-feed-item--compact .wptg-feed-badge {
+    font-size: 1.5rem;
+}
+
+.wptg-feed-text {
     flex: 1;
     min-width: 0;
     display: flex;
@@ -788,10 +841,56 @@
     line-height: 1.4;
 }
 
+/* Compact titles stay on two lines so the card keeps its short height. */
+.wptg-feed-item--compact .wptg-feed-title {
+    font-size: 0.95rem;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+}
+
+.wptg-feed-excerpt {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--wptg-color-muted);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    overflow: hidden;
+}
+
+/* Read more = text + icon. Featured: pushed to the bottom right. The
+   Alignment control in Style > Numbered Feed overrides the horizontal side. */
 .wptg-feed-readmore {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--wptg-color-accent);
+}
+
+.wptg-feed-item--featured .wptg-feed-readmore {
+    margin-top: auto;
+    justify-content: flex-end;
+}
+
+.wptg-feed-readmore-icon {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.85em;
+}
+
+.wptg-feed-readmore-icon:empty {
+    display: none;
+}
+
+.wptg-feed-readmore-icon svg {
+    fill: currentColor;
+    width: 1em;
+    height: 1em;
 }
 
 /* --- Grid thumbnail (Galeri Foto content panel) — reuses .wptg-post-item
@@ -912,6 +1011,291 @@
     color: var(--wptg-color-muted);
 }
 
+/* --- Document list (Standar Pelayanan / Maklumat Pelayanan content panel) ---
+   One card per post, two rows:
+     .wptg-doc-head   icon (left) + title / date / file count
+     .wptg-doc-cover  wide image BELOW the head, with the "Lihat" / "Unduh"
+                      pills (.wptg-doc-card-actions) on its top-right corner.
+                      A card without a cover shows the pills as their own row.
+   Every number is var(--name, design value): Elementor's Style > Document Card
+   only sets the variable, and a page without any setting keeps the design
+   values. The list of names and values: .agents/tasks/document-card/UKURAN.md.
+   The tablet/mobile defaults sit in the media queries right after this block.
+   The card is NOT focusable: the "Lihat" <button> is the keyboard way in. */
+.wptg-doc-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--wptg-doc-list-gap, 17px);
+}
+
+.wptg-doc-card {
+    display: flex;
+    flex-direction: column;
+    padding: var(--wptg-doc-card-padding, 20px 22px);
+    cursor: pointer;
+    background-color: var(--wptg-doc-card-bg, #f9f5f1);
+    border-radius: var(--wptg-doc-card-radius, 8px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wptg-doc-card:hover {
+    background-color: var(--wptg-doc-card-bg-hover, #f3ece3);
+}
+
+/* Row 1: icon + text. */
+.wptg-doc-head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--wptg-doc-head-gap, 24px);
+}
+
+/* width AND font-size follow the size, so a font icon (<i>) and an svg both fit. */
+.wptg-doc-icon {
+    flex: 0 0 auto;
+    display: inline-flex;
+    justify-content: center;
+    width: var(--wptg-doc-icon-size, 53px);
+    font-size: var(--wptg-doc-icon-size, 53px);
+    line-height: 1;
+    color: var(--wptg-doc-icon-color, #f0b95a);
+}
+
+/* A custom icon whose slot has not been filled in yet (see fillIconSlots() in taxonomy-grid.js). */
+.wptg-doc-icon:empty {
+    display: none;
+}
+
+.wptg-doc-icon svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    fill: currentColor;
+}
+
+/* The built-in drawing is line art: no fill, stroke from currentColor. */
+.wptg-doc-icon .wptg-doc-icon-svg {
+    fill: none;
+}
+
+.wptg-doc-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* .wptg-doc-card prefix: wins over the heading/link colors of a theme or the Elementor kit. */
+.wptg-doc-card .wptg-doc-title {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    color: var(--wptg-doc-title-color, #f0b95a);
+}
+
+.wptg-doc-card:hover .wptg-doc-title {
+    color: var(--wptg-doc-title-color-hover, var(--wptg-doc-title-color, #f0b95a));
+}
+
+.wptg-doc-card .wptg-doc-date {
+    margin-top: 7px;
+    font-size: 13.5px;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--wptg-doc-date-color, #1b365d);
+}
+
+.wptg-doc-card .wptg-doc-count {
+    margin-top: 3px;
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: var(--wptg-color-muted);
+}
+
+/* Row 2: the cover. Fixed height (not a ratio); the top of the first page is what shows. */
+.wptg-doc-cover {
+    position: relative;
+    overflow: hidden;
+    margin-top: var(--wptg-doc-cover-gap, 13px);
+    height: var(--wptg-doc-cover-height, 116px);
+    border-radius: var(--wptg-doc-cover-radius, 6px);
+    background: var(--wptg-color-border);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+}
+
+.wptg-doc-card .wptg-doc-cover img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    object-fit: cover;
+    object-position: center top;
+}
+
+/* The two pills. On the cover: overlay on the top-right corner. */
+.wptg-doc-card-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--wptg-doc-actions-gap, 6px);
+}
+
+.wptg-doc-cover .wptg-doc-card-actions {
+    position: absolute;
+    top: var(--wptg-doc-actions-top, 9px);
+    right: var(--wptg-doc-actions-right, 9px);
+}
+
+/* Without a cover: their own row under the head, on the right. */
+.wptg-doc-card > .wptg-doc-card-actions {
+    justify-content: flex-end;
+    margin-top: var(--wptg-doc-cover-gap, 13px);
+}
+
+/* .wptg-doc-card prefix on every pill rule: wins over theme / Elementor kit button and link styles. */
+.wptg-doc-card .wptg-doc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: var(--wptg-doc-btn-min-width, 52px);
+    min-height: var(--wptg-doc-btn-height, 22px);
+    margin: 0;
+    padding: var(--wptg-doc-btn-padding, 0 7px);
+    border: 0;
+    border-radius: var(--wptg-doc-btn-radius, 999px);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.wptg-doc-card .wptg-doc-btn--view {
+    background-color: var(--wptg-doc-view-bg, #17305b);
+    color: var(--wptg-doc-view-color, #ffffff);
+}
+
+.wptg-doc-card .wptg-doc-btn--view:hover,
+.wptg-doc-card .wptg-doc-btn--view:focus-visible {
+    background-color: var(--wptg-doc-view-bg-hover, #0f2347);
+    color: var(--wptg-doc-view-color-hover, var(--wptg-doc-view-color, #ffffff));
+}
+
+.wptg-doc-card .wptg-doc-btn--download {
+    background-color: var(--wptg-doc-download-bg, #edb75b);
+    color: var(--wptg-doc-download-color, #ffffff);
+}
+
+.wptg-doc-card .wptg-doc-btn--download:hover,
+.wptg-doc-card .wptg-doc-btn--download:focus-visible {
+    background-color: var(--wptg-doc-download-bg-hover, #e0a444);
+    color: var(--wptg-doc-download-color-hover, var(--wptg-doc-download-color, #ffffff));
+}
+
+/* White ring + dark backing: visible on the light cover and on the cream card. */
+.wptg-doc-card .wptg-doc-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 1px;
+    box-shadow: 0 0 0 4px rgba(23, 48, 91, 0.85);
+}
+
+.wptg-doc-btn-svg {
+    display: block;
+    flex: 0 0 auto;
+    width: var(--wptg-doc-btn-icon-size, 12px);
+    height: var(--wptg-doc-btn-icon-size, 12px);
+}
+
+/* Tablet and mobile defaults: tighter card, smaller everything. A variable set in
+   Elementor still wins (its value replaces the fallback after the comma). */
+@media (max-width: 1024px) {
+    .wptg-doc-card {
+        padding: var(--wptg-doc-card-padding, 15px);
+    }
+
+    .wptg-doc-icon {
+        width: var(--wptg-doc-icon-size, 42px);
+        font-size: var(--wptg-doc-icon-size, 42px);
+    }
+
+    .wptg-doc-card .wptg-doc-title {
+        font-size: 16px;
+    }
+
+    .wptg-doc-card .wptg-doc-date {
+        margin-top: 6px;
+        font-size: 12px;
+    }
+
+    .wptg-doc-cover {
+        margin-top: var(--wptg-doc-cover-gap, 12px);
+        height: var(--wptg-doc-cover-height, 96px);
+    }
+
+    .wptg-doc-card > .wptg-doc-card-actions {
+        margin-top: var(--wptg-doc-cover-gap, 12px);
+    }
+
+    .wptg-doc-card .wptg-doc-btn {
+        min-width: var(--wptg-doc-btn-min-width, 48px);
+        min-height: var(--wptg-doc-btn-height, 20px);
+        font-size: 10.5px;
+    }
+}
+
+@media (max-width: 767px) {
+    .wptg-doc-head {
+        gap: var(--wptg-doc-head-gap, 16px);
+    }
+}
+
+/* Very narrow screen: the icon goes above the text. */
+@media (max-width: 359px) {
+    .wptg-doc-head {
+        flex-direction: column;
+        gap: var(--wptg-doc-head-gap, 10px);
+    }
+}
+
+/* Skeleton variant (wptg_render_skeleton('document')): same layout classes, grey blocks. */
+.wptg-skeleton .wptg-doc-icon.wptg-skeleton-block {
+    display: block;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    border-radius: var(--wptg-skeleton-radius, 8px);
+}
+
+.wptg-skeleton .wptg-doc-card .wptg-skeleton-line--title {
+    width: 70%;
+}
+
+.wptg-skeleton .wptg-doc-card .wptg-skeleton-line--meta {
+    width: 50%;
+}
+
+.wptg-skeleton .wptg-doc-card .wptg-skeleton-line + .wptg-skeleton-line {
+    margin-top: 0.35rem;
+}
+
+/* The pills sit on the grey cover block: lighter, so they are still visible. Size comes from .wptg-doc-btn. */
+.wptg-skeleton .wptg-doc-cover .wptg-skeleton-pill {
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 999px;
+}
+
 /* --- Load more --- */
 .wptg-load-more {
     display: block;
@@ -929,6 +1313,27 @@
 
 .wptg-load-more:hover {
     background-color: var(--wptg-color-border);
+}
+
+/* Loading state while the next page is fetched: JS adds .is-loading and
+   disabled, so the button cannot be clicked twice. */
+.wptg-load-more.is-loading {
+    position: relative;
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.wptg-load-more.is-loading::after {
+    content: '';
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
+    margin-left: 0.5em;
+    vertical-align: -0.1em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: wptg-spin 0.8s linear infinite;
 }
 
 /* ==========================================================================
@@ -1010,6 +1415,611 @@
 }
 
 /* ==========================================================================
+   MEDIA POPUP (video / photo) — see assets/js/media-popup.js
+   --------------------------------------------------------------------------
+   modal.js adds .wptg-media-modal (+ --video | --photo | --loading | --message)
+   to .wptg-modal. The modal sits in <body>, OUTSIDE .wptg-wrapper, so the
+   variables are defined on .wptg-media-modal itself: the popup looks right on
+   pages that have no Taxonomy Grid widget (e.g. the Content Grid on the
+   homepage). Override them in Additional CSS, or with Style > Modal / Lightbox
+   > Media Popup. The old "post" and "image" modals do not get this class and
+   keep their look.
+   ========================================================================== */
+
+.wptg-media-modal {
+    --wptg-modal-backdrop-bg: rgba(0, 0, 0, 0.6);
+    --wptg-modal-panel-width: 800px;
+    --wptg-modal-panel-bg: #fbf7f4;
+    --wptg-modal-radius: 8px;
+    --wptg-modal-padding: 14px;
+    --wptg-modal-close-bg: #f1a945;
+    --wptg-modal-close-color: #ffffff;
+    --wptg-modal-close-size: 28px;
+    --wptg-modal-title-color: #1b365d;
+    --wptg-modal-date-color: #4b5563;
+    /* Tall photos and the 16:9 player never get taller than this. */
+    --wptg-modal-media-max-height: 70vh;
+}
+
+.wptg-media-modal .wptg-modal-backdrop {
+    background: var(--wptg-modal-backdrop-bg);
+}
+
+/* overflow: visible so the close button can stick out of the panel's corner.
+   height: auto because the phone rule of the old modal makes the panel full screen. */
+.wptg-media-modal .wptg-modal-panel {
+    width: min(var(--wptg-modal-panel-width), 92vw);
+    max-width: none;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding: var(--wptg-modal-padding);
+    background: var(--wptg-modal-panel-bg);
+    border-radius: var(--wptg-modal-radius);
+}
+
+.wptg-media-modal .wptg-modal-close {
+    top: -10px;
+    right: -10px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--wptg-modal-close-size);
+    height: var(--wptg-modal-close-size);
+    padding: 0 0 2px;
+    border-radius: 50%;
+    background: var(--wptg-modal-close-bg);
+    color: var(--wptg-modal-close-color);
+    font-size: calc(var(--wptg-modal-close-size) * 0.75);
+    line-height: 1;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.wptg-media-frame {
+    border-radius: calc(var(--wptg-modal-radius) / 2);
+    overflow: hidden;
+}
+
+/* Photo: full panel width, height follows the ratio but never passes the max. */
+.wptg-media-modal--photo .wptg-media-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    max-height: var(--wptg-modal-media-max-height);
+    margin: 0 auto;
+    object-fit: contain;
+}
+
+/* Video: 16:9 box. On a short screen the width shrinks so the height stays under the max. */
+.wptg-media-modal--video .wptg-media-frame {
+    width: min(100%, calc(var(--wptg-modal-media-max-height) * 16 / 9));
+    aspect-ratio: 16 / 9;
+    margin: 0 auto;
+    background: #000;
+}
+
+.wptg-media-modal--video .wptg-media-frame iframe,
+.wptg-media-modal--video .wptg-media-frame video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border: 0;
+}
+
+/* Only shown for a video URL that cannot be embedded (TikTok, Instagram...). */
+.wptg-media-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    height: 100%;
+    padding: 16px;
+    color: #ffffff;
+    text-align: center;
+}
+
+.wptg-media-fallback p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.wptg-media-fallback-link {
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: var(--wptg-modal-close-bg);
+    color: var(--wptg-modal-close-color);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.wptg-media-caption {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 10px;
+    text-align: left;
+}
+
+.wptg-media-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+    color: var(--wptg-modal-title-color);
+}
+
+.wptg-media-date {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--wptg-modal-date-color);
+}
+
+.wptg-media-loading,
+.wptg-media-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 120px;
+    font-size: 14px;
+    color: var(--wptg-modal-title-color);
+}
+
+.wptg-media-loading::before {
+    content: '';
+    width: 18px;
+    height: 18px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: wptg-spin 0.8s linear infinite;
+}
+
+@media (max-width: 767px) {
+    .wptg-media-modal .wptg-modal-panel {
+        width: 92vw;
+        padding: 10px;
+    }
+}
+
+/* ==========================================================================
+   DOCUMENT POPUP (PDF / Word / images) — see assets/js/document-viewer.js
+   --------------------------------------------------------------------------
+   Same panel as the Media Popup (.wptg-media-modal) plus the variant
+   .wptg-media-modal--document. A big panel with a scrolling viewer
+   (.wptg-doc-stage) inside, so a long PDF scrolls INSIDE the popup. Every
+   look is a CSS variable with a default here; Style > Document Popup writes
+   the same variables.
+   ========================================================================== */
+
+.wptg-media-modal--document {
+    --wptg-doc-panel-width: 960px;
+    --wptg-doc-viewer-height: 72vh;
+    --wptg-doc-viewer-bg: #ebe7e1;
+    --wptg-doc-page-bg: #ffffff;
+    --wptg-doc-page-gap: 12px;
+    --wptg-doc-page-min-height: 240px;
+    --wptg-doc-chip-color: #1b365d;
+    --wptg-doc-chip-bg: #ffffff;
+    --wptg-doc-chip-active-color: #ffffff;
+    --wptg-doc-chip-active-bg: #f1a945;
+}
+
+/* Later in the file than the base media-popup rules, so it wins at equal specificity. */
+.wptg-media-modal--document .wptg-modal-panel {
+    width: min(var(--wptg-doc-panel-width), 96vw);
+}
+
+/* The panel keeps a margin of 3vw on a phone: the round close button sticks out 10px. */
+@media (max-width: 767px) {
+    .wptg-media-modal--document .wptg-modal-panel {
+        width: min(var(--wptg-doc-panel-width), 94vw);
+    }
+}
+
+.wptg-doc-viewer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* File chips: one row that scrolls sideways when there are many files. */
+.wptg-doc-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 2px 2px 4px;
+    overflow-x: auto;
+}
+
+.wptg-doc-chip {
+    flex: 0 0 auto;
+    max-width: 240px;
+    padding: 6px 14px;
+    overflow: hidden;
+    border: 0;
+    border-radius: 999px;
+    background: var(--wptg-doc-chip-bg);
+    color: var(--wptg-doc-chip-color);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.wptg-doc-chip.is-active {
+    background: var(--wptg-doc-chip-active-bg);
+    color: var(--wptg-doc-chip-active-color);
+}
+
+.wptg-doc-chip:focus-visible,
+.wptg-doc-stage:focus-visible,
+.wptg-doc-action:focus-visible {
+    outline: 2px solid var(--wptg-doc-chip-active-bg);
+    outline-offset: 2px;
+}
+
+/* The viewer. min(): on a short screen (phone in landscape) it shrinks so the
+   caption and the close button stay on screen. */
+.wptg-doc-stage {
+    position: relative;
+    height: min(var(--wptg-doc-viewer-height), calc(100vh - 150px));
+    overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 6px;
+    background: var(--wptg-doc-viewer-bg);
+}
+
+.wptg-doc-pages {
+    display: flex;
+    flex-direction: column;
+    gap: var(--wptg-doc-page-gap);
+    padding: var(--wptg-doc-page-gap);
+}
+
+/* A page is a box with the page's shape from the start, so the scrollbar does
+   not jump while the canvases are drawn one by one. */
+.wptg-doc-page {
+    position: relative;
+    width: 100%;
+    min-height: var(--wptg-doc-page-min-height);
+    background: var(--wptg-doc-page-bg);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.wptg-doc-page.is-rendered {
+    min-height: 0;
+}
+
+.wptg-doc-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.wptg-media-modal--document .wptg-doc-image {
+    display: block;
+    max-width: 100%;
+    max-height: none;
+    height: auto;
+    margin: 0 auto;
+}
+
+/* Word preview. Transparent until loaded, so the spinner behind it shows. */
+.wptg-doc-stage > .wptg-doc-office {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: transparent;
+}
+
+.wptg-doc-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 160px;
+    height: 100%;
+    font-size: 14px;
+    color: var(--wptg-modal-title-color);
+}
+
+.wptg-doc-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: wptg-spin 0.8s linear infinite;
+}
+
+/* Failure, a password-protected PDF, Word on a non-public site, unsupported file. */
+.wptg-doc-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 100%;
+    padding: 24px;
+    color: var(--wptg-modal-title-color);
+    text-align: center;
+}
+
+.wptg-doc-fallback-text {
+    max-width: 420px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.wptg-doc-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.wptg-doc-actions:empty {
+    display: none;
+}
+
+.wptg-doc-action {
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: var(--wptg-modal-close-bg);
+    color: var(--wptg-modal-close-color);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+/* ==========================================================================
+   EMPTY STATE — skeleton (see wptg_render_skeleton() in wp-taxonomy-grid.php)
+   --------------------------------------------------------------------------
+   Shown instead of any "no data" text. The cards reuse the REAL layout
+   classes (.wptg-numbered-feed, .wptg-feed-item, .wptg-feed-thumb,
+   .wptg-posts-grid, ...), so image heights, gaps, card radius and the
+   responsive rules are the same as the real content; only the grey blocks
+   below are new.
+
+   Colors / radius are CSS variables with fallbacks (no default is set on
+   .wptg-wrapper, so an unset value really falls back). Elementor writes them
+   from Style > Empty State (Skeleton); Additional CSS can do the same:
+     .wptg-wrapper { --wptg-skeleton-color: #e5e7eb; --wptg-skeleton-shine: #f9fafb; }
+   ========================================================================== */
+
+.wptg-skeleton {
+    position: relative; /* anchor for the visually hidden text */
+    display: block;
+}
+
+/* Visually hidden, still read by screen readers. */
+.wptg-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* Grey block with a light band sliding over it. The band is a narrow
+   (40%) gradient whose position runs from fully outside on the left (-67%)
+   to fully outside on the right (167%). */
+.wptg-skeleton .wptg-skeleton-block {
+    display: block;
+    background-color: var(--wptg-skeleton-color, #e9eaee);
+    background-image: linear-gradient(90deg, transparent 0%, var(--wptg-skeleton-shine, #f6f6f8) 50%, transparent 100%);
+    background-repeat: no-repeat;
+    background-size: 40% 100%;
+    background-position: -67% 0;
+    animation: wptg-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes wptg-skeleton-shimmer {
+    0%   { background-position: -67% 0; }
+    100% { background-position: 167% 0; }
+}
+
+/* Visitors who asked for less motion get still grey blocks. */
+@media (prefers-reduced-motion: reduce) {
+    .wptg-skeleton .wptg-skeleton-block {
+        animation: none;
+    }
+}
+
+/* Cards are not clickable: no hover lift / background change, no pointer. */
+.wptg-skeleton .wptg-skeleton-card {
+    pointer-events: none;
+    cursor: default;
+}
+
+/* Image areas keep the radius of the real card unless Style > Empty State sets one. */
+.wptg-skeleton .wptg-feed-thumb.wptg-skeleton-block {
+    border-radius: var(--wptg-skeleton-radius, 8px);
+}
+
+.wptg-skeleton .wptg-list-thumbnail-media.wptg-skeleton-block {
+    border-radius: var(--wptg-skeleton-radius, var(--wptg-radius, 6px));
+}
+
+/* The photo card clips its own corners (overflow hidden), so the thumb stays square. */
+.wptg-skeleton .wptg-photo-thumb.wptg-skeleton-block {
+    border-radius: 0;
+}
+
+/* Text lines. Widths are percentages of the text column. */
+.wptg-skeleton .wptg-skeleton-line {
+    width: 100%;
+    height: 0.8rem;
+    border-radius: var(--wptg-skeleton-radius, 6px);
+}
+
+.wptg-skeleton .wptg-skeleton-line--meta {
+    width: 30%;
+    height: 0.7rem;
+}
+
+.wptg-skeleton .wptg-skeleton-line--title {
+    width: 90%;
+    height: 1.05rem;
+}
+
+.wptg-skeleton .wptg-skeleton-line--title-short {
+    width: 60%;
+    height: 1.05rem;
+}
+
+/* Last of the three excerpt lines is shorter, like a real paragraph end. */
+.wptg-skeleton .wptg-feed-text .wptg-skeleton-line--text:nth-child(6) {
+    width: 70%;
+}
+
+.wptg-skeleton .wptg-skeleton-line--readmore {
+    width: 7rem;
+    height: 0.8rem;
+    align-self: flex-start;
+}
+
+.wptg-skeleton .wptg-feed-item--featured .wptg-skeleton-line--readmore {
+    align-self: flex-end;
+    margin-top: auto;
+}
+
+/* The big 01 / 02 number. */
+.wptg-skeleton .wptg-skeleton-number {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    width: 3rem;
+    height: 2.6rem;
+    border-radius: var(--wptg-skeleton-radius, 6px);
+}
+
+.wptg-skeleton .wptg-feed-item--compact .wptg-skeleton-number {
+    align-self: center; /* the compact body is a row, centered like the real number */
+    width: 1.8rem;
+    height: 1.5rem;
+}
+
+/* Caption lines under a photo / beside a video thumbnail. */
+.wptg-skeleton .wptg-photo-caption .wptg-skeleton-line + .wptg-skeleton-line {
+    margin-top: 0.5rem;
+}
+
+.wptg-skeleton .wptg-list-thumbnail-body .wptg-skeleton-line--title {
+    width: 80%;
+}
+
+/* Detail: title, small meta line, then a block of text. */
+.wptg-skeleton-detail {
+    display: flex;
+    flex-direction: column;
+}
+
+.wptg-skeleton .wptg-skeleton-line--heading {
+    width: 55%;
+    height: 1.6rem;
+    margin-bottom: 0.75rem;
+}
+
+.wptg-skeleton-detail .wptg-skeleton-line--meta {
+    margin-bottom: 1.25rem;
+}
+
+.wptg-skeleton-paragraph {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.wptg-skeleton .wptg-skeleton-paragraph .wptg-skeleton-line--text:nth-child(3n) {
+    width: 85%;
+}
+
+.wptg-skeleton .wptg-skeleton-paragraph .wptg-skeleton-line--text:last-child {
+    width: 55%;
+}
+
+/* Sidebar: a few short, staggered lines like a term list. */
+.wptg-skeleton--sidebar-terms {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: 0.4rem 0;
+}
+
+.wptg-skeleton .wptg-skeleton-term {
+    height: 1rem;
+    width: 85%;
+    border-radius: var(--wptg-skeleton-radius, 6px);
+}
+
+.wptg-skeleton .wptg-skeleton-term:nth-child(2) {
+    width: 65%;
+    margin-left: 1rem;
+}
+
+.wptg-skeleton .wptg-skeleton-term:nth-child(3) {
+    width: 75%;
+    margin-left: 1rem;
+}
+
+.wptg-skeleton .wptg-skeleton-term:nth-child(4) {
+    width: 55%;
+}
+
+/* "Not found" slots toggled by JS (display none -> shown). Only spacing; the skeleton inside does the talking. */
+.wptg-no-results .wptg-skeleton--sidebar-terms,
+.wptg-section-no-results .wptg-skeleton--sidebar-terms {
+    padding: 0;
+}
+
+/* Phones: smaller numbers, same idea as the real cards. */
+@media (max-width: 768px) {
+    .wptg-skeleton .wptg-skeleton-number {
+        width: 2.4rem;
+        height: 2rem;
+    }
+
+    .wptg-skeleton .wptg-feed-item--compact .wptg-skeleton-number {
+        width: 1.4rem;
+        height: 1.2rem;
+    }
+
+    .wptg-skeleton .wptg-skeleton-line--heading {
+        width: 75%;
+    }
+}
+
+/* One line for editors that says why the widget is empty. Outside .wptg-wrapper, so plain colors. */
+.wptg-editor-note {
+    margin: 0.75rem 0 0;
+    padding: 0.5rem 0.75rem;
+    border: 1px dashed #d1d5db;
+    border-radius: 6px;
+    background: #fafafa;
+    color: #6b7280;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+/* ==========================================================================
    SHARED — loading state & animation
    ========================================================================== */
 
@@ -1043,6 +2053,39 @@
    RESPONSIVE
    ========================================================================== */
 
+/* Tablet and below (Sections mode): sidebar goes above the content and the
+   featured card becomes vertical (image on top). !important on the sidebar
+   for the same reason as in the 768px block below. */
+@media (max-width: 1024px) {
+    .wptg-sections-body {
+        flex-direction: column;
+        /* `.wptg-body` aligns to flex-start, which would shrink the content
+           column to its text width once the row becomes a column. */
+        align-items: stretch;
+    }
+
+    .wptg-sections-sidebar {
+        flex: none !important;
+        width: 100%;
+        min-width: 0;
+    }
+
+    .wptg-feed-item--featured {
+        flex-direction: column;
+    }
+
+    .wptg-feed-item--featured .wptg-feed-thumb {
+        flex: none;
+        width: 100%;
+        min-height: 0;
+        aspect-ratio: 16 / 9;
+    }
+
+    .wptg-feed-item--featured .wptg-feed-body {
+        padding: 0.25rem 0.5rem 0.5rem;
+    }
+}
+
 @media (max-width: 768px) {
     .wptg-header {
         padding: 1.75rem 1rem;
@@ -1067,12 +2110,16 @@
 
     .wptg-body {
         flex-direction: column;
+        align-items: stretch;
         padding: 1rem;
         gap: 1.25rem;
     }
 
+    /* !important: Style > Container > Sidebar Width writes `flex: 0 0 280px`
+       with a more specific selector, which in a column would be a 280px TALL
+       sidebar. */
     .wptg-sidebar {
-        flex: none;
+        flex: none !important;
         width: 100%;
         min-width: 0;
     }
@@ -1081,15 +2128,9 @@
         font-size: 1.3rem;
     }
 
-    /* Grid mode */
-    .wptg-wrapper.wptg-mode-grid {
-        flex-direction: column;
-        padding: 1rem;
-        gap: 1.25rem;
-    }
-
+    /* Grid mode: the row collapses via the shared `.wptg-body` mobile rule. */
     .wptg-categories {
-        flex: none;
+        flex: none !important;
         width: 100%;
     }
 
@@ -1103,22 +2144,41 @@
     }
 
     .wptg-sections-sidebar {
-        flex: none;
+        flex: none !important;
         width: 100%;
         min-width: 0;
     }
 
-    .wptg-feed-item,
-    .wptg-feed-item--featured,
     .wptg-list-thumbnail-item {
         flex-direction: column;
     }
 
-    .wptg-feed-thumb,
-    .wptg-feed-item--featured .wptg-feed-thumb,
     .wptg-list-thumbnail-media {
         flex: none;
         width: 100%;
+    }
+
+    /* Feed cards on a phone: the numbers shrink. The featured card turns
+       vertical in the <=1024px block below; the compact card keeps its small
+       thumbnail on the left. */
+    .wptg-feed-item--featured .wptg-feed-badge {
+        font-size: 2rem;
+    }
+
+    .wptg-feed-item--compact .wptg-feed-badge {
+        font-size: 1.15rem;
+    }
+
+    .wptg-feed-item--compact {
+        padding-right: 0.6rem;
+    }
+
+    .wptg-feed-item--compact .wptg-feed-body {
+        gap: 0.5rem;
+    }
+
+    .wptg-content-title {
+        font-size: 1.25rem;
     }
 
     .wptg-modal-panel {

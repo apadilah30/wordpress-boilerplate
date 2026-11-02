@@ -100,10 +100,34 @@ class WPSS_Elementor_Widget extends Widget_Base
             'placeholder' => __('https://instagram.com/youraccount', 'wp-social-showcase'),
         ]);
 
+        // Default 'manual' = perilaku v1.0.0, jadi widget lama yang belum punya
+        // setting ini tetap tampil sebagai galeri manual.
+        $repeater->add_control('feed_source', [
+            'label'   => __('Feed Source', 'wp-social-showcase'),
+            'type'    => Controls_Manager::SELECT,
+            'options' => [
+                'manual'    => __('Manual Gallery', 'wp-social-showcase'),
+                'shortcode' => __('Shortcode (from a feed plugin)', 'wp-social-showcase'),
+            ],
+            'default' => 'manual',
+        ]);
+
+        $repeater->add_control('feed_shortcode', [
+            'label'       => __('Feed Shortcode', 'wp-social-showcase'),
+            'type'        => Controls_Manager::TEXTAREA,
+            'rows'        => 3,
+            'placeholder' => '[instagram-feed feed=1]',
+            'description' => __('Paste the shortcode from your feed plugin. Manual gallery images are ignored in this mode.', 'wp-social-showcase'),
+            'condition'   => ['feed_source' => 'shortcode'],
+        ]);
+
+        // Hanya disembunyikan (bukan dihapus) saat mode Shortcode, supaya
+        // gambar yang sudah dipilih tidak hilang kalau user balik ke Manual.
         $repeater->add_control('gallery', [
-            'label' => __('Gallery (up to 16 images, shown as a 4x4 grid)', 'wp-social-showcase'),
-            'type'  => Controls_Manager::GALLERY,
-            'default' => [],
+            'label'     => __('Gallery (up to 16 images, shown as a 4x4 grid)', 'wp-social-showcase'),
+            'type'      => Controls_Manager::GALLERY,
+            'default'   => [],
+            'condition' => ['feed_source!' => 'shortcode'],
         ]);
 
         $this->add_control('wpss_platforms', [
@@ -270,6 +294,46 @@ class WPSS_Elementor_Widget extends Widget_Base
         ]);
 
         $this->end_controls_section();
+
+        // Cuma bungkus luar feed. Isi feed (kartu, kolom, warna) diatur di
+        // plugin feed-nya sendiri, bukan di sini.
+        $this->start_controls_section('wpss_section_style_feed', [
+            'label' => __('Feed Container', 'wp-social-showcase'),
+            'tab'   => Controls_Manager::TAB_STYLE,
+        ]);
+
+        $this->add_responsive_control('wpss_feed_padding', [
+            'label'      => __('Padding', 'wp-social-showcase'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', 'em'],
+            'selectors'  => ['{{WRAPPER}} .wpss-feed' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};'],
+        ]);
+
+        $this->add_control('wpss_feed_bg', [
+            'label'     => __('Background Color', 'wp-social-showcase'),
+            'type'      => Controls_Manager::COLOR,
+            'selectors' => ['{{WRAPPER}} .wpss-feed' => 'background-color: {{VALUE}};'],
+        ]);
+
+        $this->add_responsive_control('wpss_feed_radius', [
+            'label'      => __('Border Radius', 'wp-social-showcase'),
+            'type'       => Controls_Manager::DIMENSIONS,
+            'size_units' => ['px', '%'],
+            'selectors'  => ['{{WRAPPER}} .wpss-feed' => 'border-radius: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};'],
+        ]);
+
+        $this->add_responsive_control('wpss_feed_min_height', [
+            'label'      => __('Min Height', 'wp-social-showcase'),
+            'type'       => Controls_Manager::SLIDER,
+            'size_units' => ['px', 'vh'],
+            'range'      => [
+                'px' => ['min' => 0, 'max' => 1000],
+                'vh' => ['min' => 0, 'max' => 100],
+            ],
+            'selectors'  => ['{{WRAPPER}} .wpss-feed' => 'min-height: {{SIZE}}{{UNIT}};'],
+        ]);
+
+        $this->end_controls_section();
     }
 
     protected function render(): void
@@ -285,11 +349,16 @@ class WPSS_Elementor_Widget extends Widget_Base
                 }
             }
 
+            // Item lama tidak punya key feed_source -> jatuh ke 'manual'.
+            $feed_source = ($item['feed_source'] ?? 'manual') === 'shortcode' ? 'shortcode' : 'manual';
+
             $platforms[] = [
-                'icon'    => $item['icon'] ?? null,
-                'label'   => $item['label'] ?? '',
-                'url'     => $item['url'] ?? '',
-                'gallery' => $gallery,
+                'icon'        => $item['icon'] ?? null,
+                'label'       => $item['label'] ?? '',
+                'url'         => $item['url'] ?? '',
+                'gallery'     => $gallery,
+                'feed_source' => $feed_source,
+                'shortcode'   => (string) ($item['feed_shortcode'] ?? ''),
             ];
         }
 

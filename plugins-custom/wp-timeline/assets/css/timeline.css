@@ -1,0 +1,189 @@
+/**
+ * Timeline - Styles
+ *
+ * Every value below is only a default. All of them are overridden from the
+ * Elementor Style tab (most through the CSS variables on .wptl-list).
+ *
+ * LAYOUT (desktop): CSS grid with 3 columns — left cards | center track
+ * (holds the line + dots) | right cards. Each card spans 2 grid rows and
+ * starts one row below the previous card, so opposite-side cards overlap
+ * vertically (staggered). `--wptl-row` (start row) is computed in PHP.
+ *
+ * LAYOUT (<768px): 2 columns — line column | cards. Every card gets its own
+ * row (`--wptl-i`), so nothing overlaps.
+ */
+
+.wptl-wrapper {
+    --wptl-color-accent: #e3a73c;
+    --wptl-color-text: #3b4a5a;
+    --wptl-color-card: #faf6f1;
+
+    display: block;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.wptl-wrapper *,
+.wptl-wrapper *::before,
+.wptl-wrapper *::after {
+    box-sizing: border-box;
+}
+
+.wptl-empty {
+    padding: 1rem;
+    color: #6b7280;
+}
+
+/* --- Grid ------------------------------------------------------------- */
+.wptl-list {
+    --wptl-center-width: 80px;
+    --wptl-row-gap: 24px;
+    --wptl-mobile-col: 40px;
+    --wptl-dot-size: 22px;
+    --wptl-dot-offset: 34px;
+    --wptl-line-width: 3px;
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--wptl-center-width) minmax(0, 1fr);
+    column-gap: 0;
+    row-gap: var(--wptl-row-gap);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* --- Center line -------------------------------------------------------
+   A pseudo-element of the grid is itself a grid item, so it can span the
+   rows between the first and the last dot. The margins push its ends from
+   the row edges to the dot centers (the extra row-gap in the bottom margin
+   is because the last row starts one gap below the row before it). */
+.wptl-list.wptl-has-line::before {
+    content: "";
+    grid-column: 2;
+    grid-row: 1 / var(--wptl-last-row);
+    justify-self: center;
+    /* Drawn as a left border (not a background) so the same rule can render
+       solid or dashed, chosen from Style > Center Line > Line Style. */
+    width: 0;
+    border-left: var(--wptl-line-width) var(--wptl-line-style, solid) var(--wptl-line-color, var(--wptl-color-accent));
+    margin-top: var(--wptl-dot-offset);
+    margin-bottom: calc(-1 * (var(--wptl-dot-offset) + var(--wptl-row-gap)));
+}
+
+/* --- Item --------------------------------------------------------------- */
+.wptl-item {
+    position: relative;
+    z-index: 1;
+    align-self: start;
+    min-width: 0;
+    grid-row: var(--wptl-row) / span 2;
+}
+
+.wptl-list > .wptl-side-left {
+    grid-column: 1;
+}
+
+.wptl-list > .wptl-side-right {
+    grid-column: 3;
+}
+
+/* --- Dot ----------------------------------------------------------------
+   Child of the item so it stays inside the semantic <li>. The item edge is
+   exactly half a center track away from the line, so the offset below puts
+   the dot center on the line. */
+.wptl-dot {
+    position: absolute;
+    top: var(--wptl-dot-offset);
+    z-index: 2;
+    width: var(--wptl-dot-size);
+    height: var(--wptl-dot-size);
+    border-radius: 50%;
+    background-color: var(--wptl-dot-color, var(--wptl-color-accent));
+    box-shadow: 0 0 0 var(--wptl-dot-ring-width, 6px) var(--wptl-dot-ring-color, rgba(227, 167, 60, 0.3));
+    transform: translateY(-50%);
+}
+
+.wptl-side-right .wptl-dot {
+    left: calc(-1 * (var(--wptl-center-width) / 2) - (var(--wptl-dot-size) / 2));
+}
+
+.wptl-side-left .wptl-dot {
+    right: calc(-1 * (var(--wptl-center-width) / 2) - (var(--wptl-dot-size) / 2));
+}
+
+/* --- Card --------------------------------------------------------------- */
+.wptl-card {
+    padding: 18px 22px;
+    border-radius: 10px;
+    background-color: var(--wptl-color-card);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.wptl-card-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 10px;
+}
+
+.wptl-side-left .wptl-card-head {
+    justify-content: flex-end;
+}
+
+.wptl-year {
+    font-size: 2rem;
+    font-weight: 500;
+    line-height: 1.1;
+    color: var(--wptl-color-accent);
+}
+
+.wptl-year-line {
+    flex: 0 0 auto;
+    display: block;
+    width: 80px;
+    height: 2px;
+    background-color: var(--wptl-color-accent);
+}
+
+.wptl-desc {
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: var(--wptl-color-text);
+}
+
+.wptl-desc > :first-child {
+    margin-top: 0;
+}
+
+.wptl-desc > :last-child {
+    margin-bottom: 0;
+}
+
+/* --- Mobile: single column, line on the left ---------------------------- */
+@media (max-width: 767px) {
+    .wptl-list {
+        grid-template-columns: var(--wptl-mobile-col) minmax(0, 1fr);
+    }
+
+    .wptl-list.wptl-has-line::before {
+        grid-column: 1;
+        grid-row: 1 / var(--wptl-count);
+    }
+
+    .wptl-list > .wptl-item {
+        grid-column: 2;
+        grid-row: var(--wptl-i);
+    }
+
+    .wptl-list .wptl-item .wptl-dot {
+        right: auto;
+        left: calc(-1 * (var(--wptl-mobile-col) / 2) - (var(--wptl-dot-size) / 2));
+    }
+
+    /* Left cards print "line, year" in the markup: flip it so every card
+       reads "year — line", left-aligned, like the right cards. */
+    .wptl-side-left .wptl-card-head {
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+}

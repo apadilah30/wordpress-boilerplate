@@ -1,0 +1,10 @@
+pdfjs-dist 6.4.299
+License: Apache-2.0 (see LICENSE in this folder)
+Source: https://www.npmjs.com/package/pdfjs-dist (npm pack pdfjs-dist@6.4.299)
+Fetched: 2026-11-01
+
+Build: LEGACY (legacy/build/*.min.mjs) so older phones work. Swap to build/*.min.mjs for the modern build.
+Files here: pdf.min.mjs, pdf.worker.min.mjs, wasm/ (JBIG2, JPEG2000, qcms), standard_fonts/, iccs/.
+Left out on purpose: source maps, cmaps (only for CJK PDFs), web viewer, types, sandbox.
+
+Update: run .agents/tasks/documents/fetch-pdfjs.js then copy-pdfjs.js, and re-test a multi-page PDF.

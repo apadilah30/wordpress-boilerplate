@@ -22,7 +22,6 @@
         <properties>
             <property name="text_domain" type="array">
                 <element value="boilerplate-starter"/>
-                <element value="wp-boilerplate-announcement"/>
             </property>
         </properties>
     </rule>

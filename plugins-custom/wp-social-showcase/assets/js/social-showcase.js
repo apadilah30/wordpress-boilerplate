@@ -1,10 +1,11 @@
 /**
  * Social Media Showcase - JavaScript
  *
- * Tab switching is pure client-side (every platform's gallery is already
+ * Tab switching is pure client-side (every platform's panel is already
  * rendered in the page) — no AJAX needed. Clicking a tab:
- *   1. Shows that platform's gallery panel, hides the others.
+ *   1. Shows that platform's panel, hides the others.
  *   2. Updates the "Open Account" button's href to that platform's URL.
+ *   3. Fires a window "resize" event so feed plugins re-calculate layout.
  */
 
 (function () {
@@ -36,6 +37,14 @@
                 if (openBtn && tab.dataset.accountUrl) {
                     openBtn.setAttribute('href', tab.dataset.accountUrl);
                 }
+
+                // Panel non-aktif itu display:none, jadi lebarnya 0 saat
+                // plugin feed (masonry/carousel/grid) selesai load dan
+                // menghitung layout -> hasilnya rusak. Event resize memaksa
+                // plugin-plugin itu menghitung ulang sekarang, saat panel
+                // sudah terlihat. Aman untuk mode galeri manual (tidak ada
+                // yang mendengarkan selain script lain di halaman).
+                window.dispatchEvent(new Event('resize'));
             });
         });
     }
