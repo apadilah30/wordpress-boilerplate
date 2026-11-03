@@ -103,6 +103,7 @@ fi
 # ------------------------------------------------------------------
 # 3. Register di composer.json root
 # ------------------------------------------------------------------
+# shellcheck disable=SC2016
 PACKAGE_NAME="$(php -r '$j = json_decode(file_get_contents($argv[1]), true); echo $j["name"];' "${COMPOSER_FILE}")"
 log_info "Registering ${PACKAGE_NAME} via composer require ..."
 composer require "${PACKAGE_NAME}:*" --no-interaction --no-scripts
